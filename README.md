@@ -6,5 +6,4 @@
 * 制作時間：約4ヶ月
 
 ## プレイ動画
-
-TODO
+https://github.com/user-attachments/assets/d2713094-36fd-4bfb-92cb-3200bc2d0807
