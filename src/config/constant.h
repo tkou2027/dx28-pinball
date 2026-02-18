@@ -1,0 +1,6 @@
+#pragma once
+
+#define SCREEN_WIDTH  (1600) // (1920) //(1280)
+#define SCREEN_HEIGHT (900)// (1080) //(720)
+#define SCREEN_ASPECT_RATIO (SCREEN_WIDTH / SCREEN_HEIGHT)
+

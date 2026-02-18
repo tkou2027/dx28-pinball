@@ -1,0 +1,118 @@
+#include "vertex_out/vertex_out_base.hlsli"
+// gbuffer
+struct PixelOut
+{
+    float4 buffer_a : SV_Target0; // world normal
+    float4 buffer_b : SV_Target1; // metallic, specular, roughness, shading model
+    float4 buffer_c : SV_Target2; // base color
+    float4 buffer_d : SV_Target3; // output hdr color, emmision
+};
+
+// textures
+Texture2D g_texture_diffuse : register(t0);
+Texture2D g_texture_emission : register(t1);
+// pbr
+Texture2D g_texture_normal : register(t2);
+Texture2D g_texture_metallic : register(t3);
+Texture2D g_texture_roughness : register(t4);
+
+SamplerState g_sampler_texture : register(s0);
+
+// materails
+cbuffer MaterialDefault : register(b0)
+{
+    float4 g_base_color;
+
+    float g_metallic;
+    float g_specular;
+    float g_roughness;
+    uint g_shading_model;
+
+    float3 g_emission_color;
+    float g_emission_intensity;
+};
+
+cbuffer FloorConfig : register(b1)
+{
+    float g_radius_outer
+    {
+    };
+    float g_radius_inner
+    {
+    };
+    float _padding_1
+    {
+    };
+    float _padding_2
+    {
+    };
+};
+
+// hack
+float3 GetNormalFromMap(float3 worldPos, float2 texCoords, float3 worldNormal)
+{
+    float3 tangentNormal = g_texture_normal.Sample(g_sampler_texture, texCoords).xyz * 2.0 - 1.0;
+
+    float3 Q1 = ddx(worldPos);
+    float3 Q2 = ddy(worldPos);
+    float2 st1 = ddx(texCoords);
+    float2 st2 = ddy(texCoords);
+
+    float3 N = normalize(worldNormal);
+ 
+    float3 T = normalize(Q1 * st2.y - Q2 * st1.y);
+    float3 B = -normalize(cross(N, T));
+
+    float3x3 TBN = float3x3(T, B, N);
+
+    return normalize(mul(tangentNormal, TBN));
+}
+
+PixelOut main(VertexOut pixel_in) : SV_TARGET
+{
+    // float dist_sq_to_center = dot(pixel_in.position_w.xz, pixel_in.position_w.xz);
+    // clip(g_radius_outer * g_radius_outer - dist_sq_to_center);
+    // clip(dist_sq_to_center - g_radius_inner * g_radius_inner);
+    float max_dist = max(abs(pixel_in.position_w.x), abs(pixel_in.position_w.z));
+    float min_dist = min(abs(pixel_in.position_w.x), abs(pixel_in.position_w.z));
+    clip(g_radius_outer - max_dist);
+    clip(max_dist - g_radius_inner);
+    
+    float tile_pattern = pixel_in.color.x;
+    
+    PixelOut pixel_out;
+    // normal
+    float3 normal_w = normalize(pixel_in.normal_w);
+    float3 tangent_w = normalize(pixel_in.tangent_w.xyz);
+    float3 bitangent_w = cross(normal_w, tangent_w.xyz) * sign(pixel_in.tangent_w.w);
+    float3x3 tbn = float3x3(tangent_w, bitangent_w, normal_w);
+    float3 normal_map = g_texture_normal.Sample(g_sampler_texture, pixel_in.uv).xyz * 2.0f - 1.0f;
+    float3 normal_map_world = normalize(mul(normal_map, tbn));
+    
+    // float3  normal_map_world = GetNormalFromMap(pixel_in.position_w.xyz, pixel_in.uv, pixel_in.normal_w);
+    pixel_out.buffer_a.xyz = normal_map_world; //normalize(pixel_in.normal_w);
+    pixel_out.buffer_a.w = 0.0f;
+    // material
+    // float metalness = g_metallic * g_texture_metallic.Sample(g_sampler_texture, pixel_in.uv);
+    float metalness = saturate(1.0 - tile_pattern); // 0 for metal
+    float roughness_factor = tile_pattern * 0.5f + 0.02f;
+    
+    pixel_out.buffer_b.r = metalness;
+    pixel_out.buffer_b.g = g_specular;
+    pixel_out.buffer_b.b = g_roughness * g_texture_roughness.Sample(g_sampler_texture, pixel_in.uv) * roughness_factor;
+    pixel_out.buffer_b.a = (float) g_shading_model / 16.0f; //1.0f;//asfloat(g_shading_model);
+    
+    // base color
+    float4 albedo = g_base_color * g_texture_diffuse.Sample(g_sampler_texture, pixel_in.uv);
+    clip(albedo.a - 0.1);
+    // pattern
+    albedo.rgb = albedo.rgb;
+    pixel_out.buffer_c = albedo;
+
+    // TODO: calc emission
+    float4 emission = g_texture_emission.Sample(g_sampler_texture, pixel_in.uv);
+    emission.rgb = emission.rgb * g_emission_color * g_emission_intensity; // TODO: calc emission
+    pixel_out.buffer_d = emission;
+
+    return pixel_out;
+}
