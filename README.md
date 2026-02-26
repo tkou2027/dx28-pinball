@@ -6,7 +6,7 @@
 * 制作時間：約4ヶ月
 
 ## プレイ動画
-https://github.com/user-attachments/assets/98f4f7b7-fe59-4c35-bf0b-da89135f1947
+https://github.com/user-attachments/assets/7d97d613-3d97-4f47-a7cf-707f75150a3c
 
 ## セールスポイント
 
