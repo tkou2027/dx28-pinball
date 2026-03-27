@@ -1,6 +1,6 @@
 ## 「VEIL」
 
-3Dアクションゲーム
+3Dアクションゲームとフレームワーク
 * 個人制作
 * 開発環境：Visual Studio・C++・DirectX11
 * 制作時間：約4ヶ月
@@ -60,6 +60,16 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 
 ### 効率的な実装
 * デファードレンダリング
+
 * GPU インスタンシング
+
 * コンピュートシェーダー
+
 * メモリ効率の改善
+
+  
+
+### 汎用的なフレームワーク
+
+作成したフレームワークは、チーム制作[https://github.com/tkou2027/at28-dash](https://github.com/tkou2027/at28-dash)でも利用されています
+
