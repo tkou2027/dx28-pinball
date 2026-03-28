@@ -18,8 +18,17 @@ struct EditorProperty {
     float max{};
 };
 
+struct EditorImage
+{
+    std::string label{};
+	void* srv_ptr{};
+	float aspect_ratio{ 1.0f };
+};
+
 struct EditorItem
 {
-    std::string label;
+    std::string label{};
+    float time{ -1.0f };
+	std::vector<EditorImage> images;
     std::vector<EditorProperty> properties;
 };

@@ -8,7 +8,6 @@
 class RenderStates;
 class RenderResource;
 class RenderScene;
-class RenderPass;
 class RenderPathManager;
 class ParticleSystem;
 class RenderSystem
@@ -19,6 +18,7 @@ public:
 	void Initialize(HWND hWnd, UINT screen_width, UINT screen_height);
 	void Finalize();
 	void Draw();
+	void UpdateRelease();
 	void Present();
 
 	ID3D11Device* GetDevice() { return m_device.Get(); }
@@ -42,7 +42,6 @@ private:
 	std::unique_ptr<RenderStates> m_render_states{};
 	std::unique_ptr<RenderResource> m_render_resource{};
 	std::unique_ptr<RenderScene> m_render_scene{};
-	std::unique_ptr<RenderPass> m_render_pass{};
 	std::unique_ptr<ParticleSystem> m_particle_system{};
 
 	std::unique_ptr<RenderPathManager> m_render_path_manager{};

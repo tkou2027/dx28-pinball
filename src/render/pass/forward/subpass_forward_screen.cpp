@@ -8,21 +8,21 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 namespace
 {
 	struct MaterialScreen
 	{
+		DirectX::XMFLOAT3 base_color{};
+		float _padding_0;
 		// color
 		DirectX::XMFLOAT3 emission_color{};
 		float emission_intensity{};
 		// size
 		DirectX::XMFLOAT2 screen_pixels_scale{};
-		// padding
-		float _padding_0;
-		float _padding_1;
+		DirectX::XMFLOAT2 filter_pixel_scale{};
 	};
 }
 
@@ -74,24 +74,7 @@ void SubPassForwardScreen::SetInfoPerMaterial(const ModelRenderKey& key)
 	auto albedo = texture_loader.GetTexture(material_default.albedo_texture_id);
 	m_context->PSSetShaderResources(0, 1, albedo.GetAddressOf());
 
-	switch (material_default.cull_type)
-	{
-	case CullType::CULL_BACK:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_back.Get());
-		break;
-	}
-	case CullType::CULL_FRONT:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_front.Get());
-		break;
-	}
-	case CullType::CULL_NONE:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_none.Get());
-		break;
-	}
-	}
+	SetCullState(material_default.cull_type);
 
 	// screen specific
 	// screen pixel texture
@@ -104,9 +87,11 @@ void SubPassForwardScreen::SetInfoPerMaterial(const ModelRenderKey& key)
 	// constant buffer
 	{
 		MaterialScreen cb{};
+		cb.base_color = material_default.base_color.ToXMFLOAT3();
 		cb.emission_color = material_default.emission_color.ToXMFLOAT3();
 		cb.emission_intensity = material_default.emission_intensity;
 		cb.screen_pixels_scale = material_screen.screen_pixels_scale.ToXMFLOAT2();
+		cb.filter_pixel_scale = DirectX::XMFLOAT2(48.0f, 48.0f); // TODO
 		m_context->UpdateSubresource(m_cb_per_material.Get(), 0, nullptr, &cb, 0, 0);
 		m_context->PSSetConstantBuffers(0, 1, m_cb_per_material.GetAddressOf());
 	}

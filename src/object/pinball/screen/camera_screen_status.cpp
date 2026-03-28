@@ -18,6 +18,9 @@ void CameraScreenStatus::Initialize()
 	CameraShapeConfig shape{};
 	shape.shape_type = CameraShapeType::ORTHOGRAPHIC;
 	shape.aspect_ratio = static_cast<float>(config.width) / static_cast<float>(config.height);// 0.25f;
+	shape.z_near = 0.0f;
+	shape.z_far = 1.0f;
+	shape.fov = 2.0f * atan(0.5f * config.height / shape.z_far);
 
 	comp_camera.InitializeCamera(config, shape); //  TODO
 	comp_camera.SetTarget({ 0.0f, 0.0f, 1.0f });

@@ -14,6 +14,7 @@ private:
 	void UpdateDelay();
 	void InitializeSprites();
 	void SetSpritesSize();
+	void SetBarLengthByValue(int sprite_id, float value);
 	ComponentId m_comp_id_sprite{};
 	static constexpr int NUM_BORDERS{ 2 };
 	int id_borders[NUM_BORDERS]{};

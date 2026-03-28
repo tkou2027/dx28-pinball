@@ -33,6 +33,7 @@ public:
 	ComPtr<ID3D11SamplerState> m_ss_linear_wrap{ nullptr }; // texture
 	ComPtr<ID3D11SamplerState> m_ss_point_wrap{ nullptr }; // pixel texture
 	ComPtr<ID3D11SamplerState> m_ss_linear_clamp{ nullptr };
+	ComPtr<ID3D11SamplerState> m_ss_point_clamp{ nullptr };
 	ComPtr<ID3D11SamplerState> m_ss_compare_less_linear_border{ nullptr }; // shadow
 	// blend
 	ComPtr<ID3D11BlendState> m_bs_disabled{ nullptr };

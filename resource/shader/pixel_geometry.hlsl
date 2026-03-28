@@ -72,7 +72,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     
     // float3 normal = GetNormalFromMap(pixel_in.position_w.xyz, pixel_in.uv, pixel_in.normal_w);
     pixel_out.buffer_a.xyz = normal; //normalize(pixel_in.normal_w);
-    pixel_out.buffer_a.w = 0.0f;
+    pixel_out.buffer_a.w = 1.0f;
     // material
     pixel_out.buffer_b.r = g_metallic * g_texture_metallic.Sample(g_sampler_texture, pixel_in.uv);
     pixel_out.buffer_b.g = g_specular;

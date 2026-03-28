@@ -16,29 +16,11 @@ struct PixelOut
     float4 emission : SV_Target1; // emission
 };
 
-// float4 main(PSIn pin) : SV_TARGET
-// {
-//     float4 col = g_particle_texture.Sample(g_sampler, pin.uv);
-//     // optionally modulate by life or alpha
-//     // col.a *= saturate(pin.life);
-//     return col;
-// }
-
-// PixelOut main(PSIn pin) : SV_TARGET
-// {
-//     PixelOut pixel_out;
-//     float4 albedo = g_particle_texture.Sample(g_sampler, pin.uv);
-//     clip(albedo.a - 0.1);
-//     // optionally modulate by life or alpha
-//     // col.a *= saturate(pin.life);
-//     pixel_out.color = albedo;
-//     pixel_out.emission = albedo * 2.0f;
-//     return pixel_out;
-// }
-
 PixelOut main(PSIn pin) : SV_TARGET
 {
     PixelOut pixel_out;
+    
+    // pin.uv.y = 1.0f - pin.uv.y; // flip Y // TODO
 
     // Sample base color from particle texture using global UV
     float4 albedo = g_particle_texture.Sample(g_sampler, pin.uv);
@@ -48,8 +30,8 @@ PixelOut main(PSIn pin) : SV_TARGET
     float2 screen_size = float2(width, height);
     float2 pixel_uv = pin.uv * screen_size;
     
-    float4 albedo_local = g_local_texture.Sample(g_sampler, pixel_uv + pin.uv_local - float2(0.5, 0.5)); //pin.uv_local);
-    albedo = albedo * albedo_local;
+   // float4 albedo_local = g_local_texture.Sample(g_sampler, pixel_uv + pin.uv_local - float2(0.5, 0.5)); //pin.uv_local);
+    // albedo = lerp(albedo, albedo * albedo_local, 0.5f);
     albedo.w = 1.0;
 
     //// uv_local is expected in [0,1] across the quad; compute distance to center
@@ -73,7 +55,7 @@ PixelOut main(PSIn pin) : SV_TARGET
     // discard fully transparent pixels early
     clip(albedo.a - 0.001f);
 
-    pixel_out.color = albedo * 4.0f;
-    pixel_out.emission = albedo * 4.0f;
+    pixel_out.color = albedo;
+    pixel_out.emission = albedo * 1.5f;
     return pixel_out;
 }

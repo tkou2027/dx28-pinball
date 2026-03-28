@@ -33,6 +33,14 @@ float4 main(VertexOut pixel_in) : SV_TARGET
     p.x = frac(p.x + 0.5f) - 0.5f;
     p.x *= aspect_ratio;
     p = p * 2.0f * scale;
+    
+    // rotation
+    float s = sin(g_rotation);
+    float c = cos(g_rotation);
+    float2 p_rot;
+    p_rot.x = c * p.x + s * p.y;
+    p_rot.y = -s * p.x + c * p.y;
+    p = p_rot;
 
     float d = CalculateSdRoundedX(p, g_radius, g_thickness);
     float step_center = step(0.0, d);

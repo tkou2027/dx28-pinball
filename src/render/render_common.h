@@ -5,6 +5,7 @@
 #include <windows.h>
 
 static constexpr unsigned int MAX_INSTANCE_PER_DRAW_CALL{ 1024 };
+static constexpr unsigned int MAX_POINT_LIGHTS{ 128 };
 
 //  constant buffers ====
 struct BufferPerProjection
@@ -60,7 +61,7 @@ struct LightDirectional
 struct LightPoint
 {
 	DirectX::XMFLOAT3 position_w;
-	float _padding_position_w;
+	float attenuation_radius;
 	DirectX::XMFLOAT3 color;
 	float _padding_color;
 };
@@ -69,7 +70,7 @@ struct LightPoint
 struct BufferLightScene
 {
 	LightDirectional dir_light;
-	LightPoint point_lights[48];
+	LightPoint point_lights[MAX_POINT_LIGHTS];
 	INT num_point_lights{ 0 };
 	float _padding_light_num_1;
 	float _padding_light_num_2;

@@ -9,6 +9,7 @@
 #include "render/pass/geometry/subpass_geometry_cel.h"
 #include "render/pass/forward/subpass_forward_projector.h"
 #include "render/pass/forward/subpass_forward_silhouette.h"
+#include "render/pass/pass_reflection.h"
 
 void RenderPathMain::Initialize()
 {
@@ -32,8 +33,11 @@ void RenderPathMain::Initialize()
 	m_pass_forward.AddSubPass(std::make_unique<SubPassForwardGlass>(), PassForward::SubPassQueue::DEFAULT);
 	m_pass_forward.AddSubPass(std::make_unique<SubPassForwardProjector>(), PassForward::SubPassQueue::DECAL);
 	m_pass_projector = &m_pass_forward.GetSubPass<SubPassForwardProjector>(PassForward::SubPassQueue::DECAL);
+	m_pass_forward.AddSubPass(std::make_unique<PassReflection>(), PassForward::SubPassQueue::DECAL);
+	m_pass_reflection = &m_pass_forward.GetSubPass<PassReflection>(PassForward::SubPassQueue::DECAL);
 	// special objects
 	m_pass_particle.Initialize(device, context);
+	m_pass_particle_cloth.Initialize(device, context);
 	m_pass_sky.Initialize(device, context);
 	m_pass_post_process.Initialize(device, context);
 	// post process
@@ -73,9 +77,8 @@ void RenderPathMain::InitializeViewContext(RenderViewKey view_key, uint32_t widt
 	textures.g_buffer_a.InitializeRenderTarget2D(device, render_target_desc);
 	textures.g_buffer_b.InitializeRenderTarget2D(device, render_target_desc);
 	textures.g_buffer_c.InitializeRenderTarget2D(device, render_target_desc);
-	textures.g_buffer_a.InitializeRenderTarget2D(device, render_target_desc);
 	textures.emission.InitializeRenderTarget2D(device, render_target_hdr_desc);
-	textures.g_buffer_depth.InitializeDepth2D(device, depth_stencil_desc);
+	textures.g_buffer_depth.InitializeDepth2DWithReadOnly(device, depth_stencil_desc);
 
 	// frame
 	textures.frame_buffer_color.InitializeRenderTarget2D(device, render_target_hdr_desc);
@@ -89,13 +92,17 @@ void RenderPathMain::InitializeViewContext(RenderViewKey view_key, uint32_t widt
 	m_texture_resources.emplace(view_key, textures);
 }
 
-void RenderPathMain::UpdateVisibleRenderables(
-	const SceneRenderablesManager& scene_renderables, CameraRenderLayer render_layer)
+void RenderPathMain::UpdateViewContext(const RenderPathViewContext& view_context)
 {
 	auto start = std::chrono::high_resolution_clock::now();
 
+	m_view_context = view_context;
+	auto& scene_renderables = g_global_context.m_render_system->GetRenderScene().GetRenderablesManager();
 	const auto& material_resource = g_global_context.m_render_system->GetRenderResource().GetMaterialManager();
+	const auto render_layer = m_view_context.render_layer;
 	const auto& visible_info = scene_renderables.GetRenderablesOfLayer(render_layer);
+	std::vector<size_t> indices_models_visible{};
+	scene_renderables.GetModelsOfCamera(m_view_context.camera, indices_models_visible);
 
 	m_pass_depth_normal.ResetRenderableIndices(render_layer);
 	m_pass_geometry.ResetRenderableIndices(render_layer);
@@ -104,7 +111,7 @@ void RenderPathMain::UpdateVisibleRenderables(
 	m_pass_sprite.SetRenderLayer(render_layer);
 
 	// models
-	for (const auto& index : visible_info.indices_model)
+	for (const auto& index : indices_models_visible)
 	{
 		const auto& model_info = scene_renderables.m_models[index];
 		const auto& material = material_resource.GetMaterialDesc(model_info.key.material_id);
@@ -136,7 +143,8 @@ void RenderPathMain::BuildRenderTargets(const InternalTextures& textures, uint32
 	m_render_targets.deferred_shading.Reset(width, height);
 	// same as frame buffer color
 	m_render_targets.deferred_shading.AddRenderTarget(textures.frame_buffer_color.GetRenderTargetView());
-	// no depth stencil, for deferred shading needs to read g-buffer depth
+	// read only depth stencil, for deferred shading needs to read g-buffer depth
+	m_render_targets.deferred_shading.SetDepthStencil(textures.g_buffer_depth.GetDepthStencilViewReadOnly());
 
 	m_render_targets.frame_buffer.Reset(width, height);
 	m_render_targets.frame_buffer.AddRenderTarget(textures.frame_buffer_color.GetRenderTargetView());
@@ -162,6 +170,11 @@ void RenderPathMain::BuildRenderTargets(const InternalTextures& textures, uint32
 	m_pass_projector->SetInputResource(
 		textures.g_buffer_a.GetShaderResourceView().Get(), // normal
 		textures.g_buffer_depth.GetShaderResourceView().Get()
+	);
+	m_pass_reflection->SetInputResource(
+		textures.g_buffer_a.GetShaderResourceView().Get(), // normal
+		textures.g_buffer_b.GetShaderResourceView().Get(), // specular
+		textures.g_buffer_depth.GetShaderResourceView().Get() // position
 	);
 
 	m_pass_post_process.SetInputResource(textures.frame_buffer_color.GetShaderResourceView().Get());
@@ -193,7 +206,7 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 	BuildRenderTargets(textures, width, height);
 
 	ID3D11DeviceContext* context = GetDeviceContext();
-	float clear_color[4]{ 0.0f, 0.0f, 0.0f, 0.0f }; // must be zero for proper blending
+	float clear_color[4]{ 0.0f, 0.0f, 0.0f, 1.0f }; // must be zero for proper blending
 
 	m_gpu_timers[0].Start();
 
@@ -237,6 +250,7 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 	m_render_targets.frame_buffer.Bind(context);
 	m_pass_sky.Draw();
 	m_pass_particle.Draw();
+	// m_pass_particle_cloth.Draw();
 	m_render_targets.frame_buffer.Unbind(context);
 
 	m_gpu_timers[1].Stop();
@@ -261,6 +275,14 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 	);
 	m_render_targets.post_process_temps[post_process_target_index].Unbind(context);
 
+		m_gpu_timers[2].Stop();
+	// m_pass_bloom.DrawOutput();
+	if (m_gpu_timers[2].TryGetTime(nullptr))
+	{
+		float avg_time = m_gpu_timers[2].AverageTime();
+		hal::dout << "GPU time: postprocess " << avg_time * 1000.0f << " ms" << std::endl;
+	}
+
 	// draw blur
 	m_pass_blur_dual.Draw();
 	// add bloom
@@ -272,14 +294,12 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 		textures.blur_textures.mip_textures[0].GetShaderResourceView().Get());
 	m_render_targets.post_process_temps[post_process_target_index].Unbind(context);
 
-	m_gpu_timers[2].Stop();
-	// m_pass_bloom.DrawOutput();
-	if (m_gpu_timers[2].TryGetTime(nullptr))
-	{
-		float avg_time = m_gpu_timers[2].AverageTime();
-		hal::dout << "GPU time: postprocess " << avg_time * 1000.0f << " ms" << std::endl;
-	}
 
+
+	ID3D11RenderTargetView* nullRTVs[8] = { nullptr };
+	context->OMSetRenderTargets(8, nullRTVs, nullptr);
+
+	
 	// out
 	view_context.render_target_out.ClearColor(context, clear_color);
 	view_context.render_target_out.ClearDepthStencil(context, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL);
@@ -290,6 +310,10 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 	);
 	// UI
 	m_pass_sprite.Draw();
+
+	ID3D11ShaderResourceView* nullSRVs[16] = { nullptr };
+	context->PSSetShaderResources(0, 16, nullSRVs);
+	context->VSSetShaderResources(0, 16, nullSRVs);
 	// view_context.render_target_out.Unbind(context);
 }
 
@@ -297,4 +321,46 @@ void RenderPathMain::Finalize()
 {
 	// TODO
 	// release textures
+}
+
+void RenderPathMain::GetEditorItems(RenderViewKey view_key, std::vector<EditorItem>& items) const
+{
+	auto it = m_texture_resources.find(view_key); // TODO: get by active camera
+	assert(it != m_texture_resources.end());
+	auto& textures = it->second;
+
+	EditorItem item{};
+	item.label = "Geometry Pass";
+	float aspect_ratio = static_cast<float>(textures.g_buffer_a.GetWidth()) / static_cast<float>(textures.g_buffer_a.GetHeight());
+
+	{
+		EditorImage image{};
+		image.srv_ptr = textures.g_buffer_a.GetShaderResourceView().Get();
+		image.aspect_ratio = aspect_ratio;
+		image.label = "Normal";
+		item.images.push_back(image);
+	}
+	{
+		EditorImage image{};
+		image.srv_ptr = textures.g_buffer_b.GetShaderResourceView().Get();
+		image.aspect_ratio = aspect_ratio;
+		image.label = "Material";
+		item.images.push_back(image);
+	}
+	{
+		EditorImage image{};
+		image.srv_ptr = textures.g_buffer_c.GetShaderResourceView().Get();
+		image.aspect_ratio = aspect_ratio;
+		image.label = "Albedo";
+		item.images.push_back(image);
+	}
+	{
+		EditorImage image{};
+		image.srv_ptr = textures.g_buffer_depth.GetShaderResourceView().Get();
+		image.aspect_ratio = aspect_ratio;
+		image.label = "Depth";
+		item.images.push_back(image);
+	}
+
+	items.push_back(item);
 }

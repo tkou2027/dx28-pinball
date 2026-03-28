@@ -1,6 +1,8 @@
 #pragma once
 #include "object/game_object.h"
 #include "util/countdown_timer.h"
+#include "object/pinball/game_util/enemy_config.h"
+#include "util/yoyo_timer.h"
 
 class ScreenMainUI : public GameObject
 {
@@ -9,53 +11,59 @@ public:
 	{
 		float rotation_ratio{ 0.0f }; // u
 		float height_ratio{}; // v
-		float radius{};
-		float thickness{};
+	};
+	enum class ActiveState
+	{
+		COOLDOWN,
+		HURT,
+		MAX
 	};
 	void Initialize() override;
-	void InitializeConfig(float value_full);
+	void InitializeConfig(const EnemyCenterShapeConfig& shape_config);
 	void Update() override;
+	void EnterActiveState(ActiveState state);
 	void SetAimInfo(const AimInfo& aim_info);
 private:
-	//void UpdateBorderAnimation();
-	void UpdateDelay();
 	void UpdateAnimation();
+	void UpdateProjection();
 	void InitializeSprites();
+	void SetBackgroundPalette();
 	void SetSpritesSize();
 	ComponentId m_comp_id_sprite{};
 	ComponentId m_comp_id_mesh{};
-	static constexpr int NUM_BORDERS{ 2 };
-	int id_borders[NUM_BORDERS]{};
-	//int id_bar_value{};
-	//int id_bar_back{}; // delay
+	int m_id_mesh_background{};
+	static const int NUM_SIDES{ 4 };
+	int m_id_mesh_projections[NUM_SIDES]{};
 
 	// status
 	enum class State
 	{
 		IDLE,
-		ACTIVE,
-		DELAY
+		ACTIVE
 	};
 	State m_state{ State::ACTIVE };
-	float m_value_full{};
-	float m_value_prev{};
-	float m_value_curr{};
-	float m_bar_length{};
-	float m_bar_offset_x{};
+	ActiveState m_active_state{ ActiveState::COOLDOWN };
+	// status
+	YoyoTimer m_animation_timer{};
 	CountdownTimer m_delay_timer{};
-	CountdownTimer m_animation_timer{};
 
-	struct ScreenStatusUIConfig
+	struct UIAnimationConfig
 	{
-		// layout
-		float border_height_ratio{ 0.2f };
-		float bar_height_ratio{ 0.33f };
-
-		// action
-		float value_full{ 1.0f };
-		float delay_duration{ 2.0f };
-		float border_rotation_speed{ -2.0f };
-		float bar_rotation_speed{ 10.0f };
+		float max_radius{ 1.0f };
+		float min_radius{ 0.0f };
+		float max_thickness{ 0.5f };
+		float min_thickness{ 0.04f };
+		float animation_interval{ 2.0f };
+		Vector4 color_inside{};
+		Vector4 color_stripe_positive{};
+		Vector4 color_stripe_negative{};
 	};
-	ScreenStatusUIConfig m_config{};
+	struct UIConfig
+	{
+		float shape_radius;
+		float shape_height;
+		Vector3 shape_position;
+		UIAnimationConfig animation_configs[static_cast<size_t>(ActiveState::MAX)];
+	};
+	UIConfig m_config{};
 };

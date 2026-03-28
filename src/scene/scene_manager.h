@@ -18,9 +18,9 @@ public:
 	void Update();
 	Scene* GetCurrentScene() { return m_scene_current; };
 	void SetNextScene(SceneName next);
+	bool UpdateTransferOut();
+	void UpdateTransferIn();
 private:
-	void UpdateTransfer();
-
 	SceneName m_scene_name_current{ SceneName::SCENE_NONE };
 	SceneName m_scene_name_next{ SceneName::SCENE_NONE };
 	Scene* m_scene_current;

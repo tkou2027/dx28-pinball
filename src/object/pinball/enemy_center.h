@@ -8,6 +8,7 @@ class EnemyCenter : public GameObject
 public:
 	void Initialize() override;
 	void OnSceneInitialized() override;
+	void OnEnterUpdateLayer(UpdateLayer layer) override;
 	void InitializeConfig(const EnemyCenterConfig& enemy_config, std::weak_ptr<class Room> room);
 	void Update() override;
 	bool IfDone() const { return m_state == EnemyState::DONE; }
@@ -39,12 +40,10 @@ private:
 	void EnterHurt();
 	void UpdateHurt();
 	// follow
-	void UpdateAimCameraFollow();
+	void UpdateAimCameraFollow(float offset = 1.0f);
 	void UpdateAimUIFollow();
 	// aim utils
 	void UpdateAimVisuals();
-	// visual utils
-	void AdjustShapeConfig();
 	// bumpers
 	void DestroyBumpers();
 	// exit
@@ -95,15 +94,9 @@ private:
 		CountdownTimer attack_countdown{};
 		// aim
 		Vector3 aim_position{};
-		float aim_player_rotation{};
+		Vector3 aim_player_forward{};
+		// float aim_player_rotation{};
 		float aim_ui_rotation{ Math::PI };
-		// lerp
-		float aim_radius{};
-		float aim_radius_start{};
-		float aim_radius_end{};
-		float aim_thickness{};
-		float aim_thickness_start{};
-		float aim_thickness_end{};
 	};
 	EnemyState m_state{};
 	EnemyStatus m_status{};

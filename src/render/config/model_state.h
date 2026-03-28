@@ -2,25 +2,7 @@
 #include "model_desc.h"
 #include "material_desc.h"
 #include "uv_animation_state.h"
-
-//struct ModelRenderInfo
-//{
-//	// model
-//	ModelDesc model_desc;
-//
-//	// material
-//	MaterialDesc m_material_desc; // ?
-//	// animation
-//	// std::vector<DirectX::XMFLOAT4X4> bones_matrix; // ?
-//	int model_skinning_matrix_id{ -1 };
-//
-//	// per-instance data
-//	// transform
-//	DirectX::XMFLOAT4X4 model_matrix;
-//	// uv animation
-//	Vector2 uv_offset{};
-//	Vector2 uv_size{ 1.0f, 1.0f };
-//};
+#include "math/aabb.h"
 
 enum class ModelType : uint16_t
 {
@@ -43,6 +25,8 @@ struct ModelRenderKey
 	// skeletal animation
 	int16_t model_skinning_id{ -1 };
 	int16_t model_skinning_matrix_id{ -1 };
+	// bounding box
+	int16_t bbox_id{ -1 };
 };
 
 struct ModelRenderInstance
@@ -94,6 +78,8 @@ public:
 	const MaterialDesc& GetMaterialDesc() const;
 	UVAnimationState& GetUVAnimationState() { return m_uv_animation_state; }
 	const UVAnimationState& GetUVAnimationState() const { return m_uv_animation_state; }
+	const AABB& GetBoundingBox() const { return m_bbox; }
+	void SetBoundingBox(const AABB& bbox) { m_bbox = bbox; }
 	bool GetActive() const { return m_active; }
 	void SetActive(bool active) { m_active = active; }
 	void Update()
@@ -117,4 +103,6 @@ private:
 	AnimationState m_animation_state;
 	UVAnimationState m_uv_animation_state{};
 	bool m_instanced{ false };
+	// aabb
+	AABB m_bbox{};
 };

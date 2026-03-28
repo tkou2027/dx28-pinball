@@ -40,9 +40,9 @@ struct EnemyCenterAimUIConfig
 	// aim ui
 	float center_height{ 0.5f };
 	float radius_min{ 0.0f };
-	float radius_max{ 0.9f };
+	float radius_max{ 2.0f };
 	float thickness_min{ 0.0f };
-	float thickness_max{ 0.4f };
+	float thickness_max{ 1.5f };
 };
 
 struct EnemyCenterConfig
@@ -54,7 +54,7 @@ struct EnemyCenterConfig
 	float health{ 100.0f };
 	float damage_delay{ 1.0f };
 	float exit_duration{ 1.0f };
-	Vector3 aim_offset{ 0.0f, 1.5f, 0.0f }; // player height offset
+	Vector3 aim_offset{ 0.15f, 1.8f, 0.0f }; // player eye and height offset
 	// attacks
 	std::vector<EnemyAttackPhaseConfig> attack_phases{};
 };

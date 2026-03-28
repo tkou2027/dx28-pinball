@@ -1,6 +1,7 @@
 #pragma once
 #include "math/transform2d.h"
 
+// legacy cpu particle
 struct ParticleConfig
 {
 	Transform2D transform;

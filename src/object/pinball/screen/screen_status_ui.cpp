@@ -59,11 +59,7 @@ void ScreenStatusUI::UpdateValue(float value)
 	m_delay_timer.Initialize(m_config.delay_duration);
 
 	// update value bar
-	auto& sprite_comp = m_components.Get<ComponentRendererSprite>(m_comp_id_sprite);
-	auto& bar_value = sprite_comp.GetSprite(id_bar_value);
-	float length = m_bar_length * (m_value_full > 0.0f ? m_value_curr / m_value_full : 1.0f);
-	bar_value.m_transform.SetScaleX(length);
-	bar_value.m_transform.SetPositionX(length * 0.5f);
+	SetBarLengthByValue(id_bar_value, m_value_curr);
 }
 
 void ScreenStatusUI::UpdateBorderAnimation()
@@ -83,20 +79,6 @@ void ScreenStatusUI::UpdateBorderAnimation()
 			border.m_uv_animation_state.uv_scroll_offset.x -= 1.0f;
 		}
 	}
-
-	//m_bar_offset_x += m_config.bar_rotation_speed * GetDeltaTime();
-	//if (m_bar_offset_x <= 0.0f)
-	//{
-	//	m_bar_offset_x += m_bar_length;
-	//}
-	//if (m_bar_offset_x >= m_bar_length)
-	//{
-	//	m_bar_offset_x -= m_bar_length;
-	//}
-	//auto& bar_value = sprite_comp.GetSprite(id_bar_value);
-	//bar_value.m_transform.SetPositionX(m_bar_offset_x);
-	//auto& bar_back = sprite_comp.GetSprite(id_bar_back);
-	//bar_back.m_transform.SetPositionX(m_bar_offset_x);
 }
 
 void ScreenStatusUI::UpdateDelay()
@@ -110,11 +92,7 @@ void ScreenStatusUI::UpdateDelay()
 		// update sprites before return
 	}
 	// update back sprite
-	auto& sprite_comp = m_components.Get<ComponentRendererSprite>(m_comp_id_sprite);
-	auto& bar_back = sprite_comp.GetSprite(id_bar_back);
-	float length = m_bar_length * (m_value_full > 0.0f ? value_delay / m_value_full : 1.0f);
-	bar_back.m_transform.SetScaleX(length);
-	bar_back.m_transform.SetPositionX(length * 0.5f);
+	SetBarLengthByValue(id_bar_back, value_delay);
 }
 
 void ScreenStatusUI::InitializeSprites()
@@ -180,4 +158,13 @@ void ScreenStatusUI::SetSpritesSize()
 	bar_value.m_transform.SetScale({ screen_width, bar_height });
 	bar_value.m_transform.SetPosition({ center_x, bar_y });
 	bar_value.m_uv_animation_state.uv_scroll_size.x = screen_width / bar_height;
+}
+
+void ScreenStatusUI::SetBarLengthByValue(int sprite_id, float value)
+{
+	auto& sprite_comp = m_components.Get<ComponentRendererSprite>(m_comp_id_sprite);
+	auto& bar = sprite_comp.GetSprite(sprite_id);
+	float length = m_bar_length * (m_value_full > 0.0f ? value / m_value_full : 1.0f);
+	bar.m_transform.SetScaleX(length);
+	bar.m_transform.SetPositionX(m_bar_length - length * 0.5f);
 }

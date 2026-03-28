@@ -26,7 +26,7 @@ struct LightDirectional
 struct LightPoint
 {
     float3 position_w;
-    float _padding_position_w;
+    float attenuation_radius;
     float3 color;
     float _padding_color;
 };
@@ -141,10 +141,10 @@ float3 ComputeLightingRamp(
     // halfLambert = min(halfLambert, shadow_lit);
     float3 rampColor = texture_ramp.Sample(sampler_ramp, float2(halfLambert, ramp_offset)).rgb;
     
-    float3 rimColor = ComputeRimLight(normal, lightDir, viewDir, albedo.rgb);
+    float3 rimColor = ComputeRim(normal, viewDir, 4.0); //ComputeRimLight(normal, lightDir, viewDir, albedo.rgb);
     float emmisionColor = 0.0f; //ComputeEmission(albedo);
     
-    float3 color = rampColor * albedo.rgb + rimColor * 0.1f + emmisionColor;
+    float3 color = rampColor * albedo.rgb + rimColor * 0.2f + emmisionColor;
     return color;
 }
 
@@ -155,7 +155,7 @@ float3 ComputeShadingToon(Texture2D texture_ramp, SamplerState sampler_ramp,
     // view dir
     float3 view_dir = normalize(view_pos_w - position_w);
     return ComputeLightingRamp(texture_ramp, sampler_ramp,
-        normal_w, view_dir, light_dir_w, albedo, ramp_offset, 1.0f);
+        normal_w, view_dir, -light_dir_w, albedo, ramp_offset, 1.0f);
 }
 
 // toon

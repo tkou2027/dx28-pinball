@@ -37,6 +37,7 @@ struct ModelTextureData
 {
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_diffuse;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_metallic;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_emissive;
 };
 
 struct ModelData

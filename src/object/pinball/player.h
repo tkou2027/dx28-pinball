@@ -1,11 +1,14 @@
 #pragma once
 #include "object/game_object.h"
 #include "util/countdown_timer.h"
+#include "physics/collider_layer.h"
 
 class Player : public GameObject
 {
 	friend class PlayerAim;
 public:
+	// config shared with title
+	static void CreateMaterialDesc(class MaterialDesc& out_material_desc);
 	void Initialize() override;
 	void OnSceneInitialized() override;
 	void Update() override;
@@ -13,9 +16,11 @@ public:
 	void OnTrigger(const struct CollisionInfo& collision) override;
 	// communicate with field items
 	float GetSpeedLevel() const;
+	Vector3 GetVelocityExpected() const;
 	// states public
 	void EnterMoveDefault();
 	void EnterControlled();
+
 private:
 	// states
 	void UpdateMove();
@@ -32,7 +37,7 @@ private:
 	//void EnterBounce();
 	//void UpdateBounce();
 
-	void HitEffect();
+	void HitEffect(ColliderLayer::Type layer);
 
 	// input 
 	Vector3 GetMoveInput() const;
@@ -62,6 +67,7 @@ private:
 		// default moving
 		float max_speed_default{ 0.5f };
 		float max_acc_default{ 0.02f };
+		float rotation_speed{ 10.0f };
 		// dash and bump
 		float dash_duration{ 1.0f / 6.0f };
 		// dash speed

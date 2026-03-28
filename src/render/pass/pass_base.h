@@ -28,8 +28,13 @@ protected:
 	const TextureLoader& GetTextureLoader() const;
 	const MaterialResourceManager& GetMaterialResourceManager() const;
 	ModelLoader& GetModelLoader();
-	int GetScreenWidth() const;
-	int GetScreenHeight() const;
+	int GetScreenWidth() const; // deprecated
+	int GetScreenHeight() const; // deprecated
+	// path
+	const class RenderPathBase& GetActiveRenderPath() const;
+	// since we might need inverse culling sometimes
+	void SetCullState(CullType type) const;
+
 	Microsoft::WRL::ComPtr<ID3D11Buffer> CreateConstantBuffer(size_t size) const;
 	// draw
 	virtual void DrawModelStatic(const struct ModelRenderInfo& model);

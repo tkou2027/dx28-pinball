@@ -5,8 +5,6 @@
 #include "object/game_object_list.h"
 #include "object/pinball/screen/camera_scan_dummy.h"
 
-
-
 using namespace DirectX;
 
 void CameraScan::Initialize()
@@ -29,6 +27,8 @@ void CameraScan::Initialize()
 	m_transform.SetPosition({ 0.0f, 10.0f, -10.0f });
 	comp_camera.SetTarget({ 0.0f, 0.0f, 0.0f });
 	// comp_camera.SetActive(false);
+
+	AddUpdateLayer(UpdateLayer::HIT_STOP);
 }
 
 void CameraScan::SetCameraMain(std::weak_ptr<class GameObject> camera_main_weak)
@@ -46,24 +46,19 @@ void CameraScan::SetReference(std::weak_ptr<class CameraScanDummy> scan_dummy)
 
 void CameraScan::Update()
 {
-	//auto player = GetOwner().FindGameObject<Player>();
-	//m_transform.SetPosition(player->GetTransform().GetPositionGlobal() + Vector3{ 0.0f, 5.0f, 5.0f });
-
-	//auto& comp_camera = m_components.Get<ComponentCamera>(m_comp_id_camera);
-	//comp_camera.SetTarget(player->GetTransform().GetPositionGlobal());
-
 	auto& comp_camera = m_components.Get<ComponentCamera>(m_comp_id_camera);
 	auto scan_dummy = m_scan_dummy.lock();
 	auto camera_main = m_camera_main.lock();
 	if (!scan_dummy || !camera_main)
 	{
-		// comp_camera.SetActive(false);
+		comp_camera.SetActive(false);
 		return;
 	}
-	// comp_camera.SetActive(true);
+	comp_camera.SetActive(true);
 	// dummy space
 	auto scan_info = scan_dummy->GetDummyWorldInfo();
 	const Vector3& dummy_view_center = scan_info.view_center;
+	const Vector3& dummy_view_center_forward = scan_info.view_center_forward;
 	const Vector3& dummy_display_center = scan_info.display_center;
 	const float dummy_scale_factor = scan_info.scale_factor;
 
@@ -77,15 +72,33 @@ void CameraScan::Update()
 
 	// space conversion
 	// naive
-	Vector3 virtual_forward = (main_target - dummy_display_center) * dummy_scale_factor;
-	virtual_forward.x *= -1.0f;
-	virtual_forward.z *= -1.0f;
-	virtual_forward.y *= -1.0f;
-	const Vector3 virtual_target = dummy_view_center;// virtual_position + virtual_forward; // TODO: rotation
-	const Vector3 virtual_position = virtual_target - virtual_forward;// (main_position - dummy_display_center) * dummy_scale_factor + dummy_view_center; // TODO: scale
+	Vector3 virtual_forward = (main_position - main_target).GetNormalized();
+	float virtual_forward_xz_length = Vector2{virtual_forward.x, virtual_forward.z}.Length();
+	Vector3 dummy_view_center_forward_xz = dummy_view_center_forward;
+	dummy_view_center_forward_xz.y = 0.0f;
+	dummy_view_center_forward_xz.Normalize();
+	virtual_forward = Vector3{
+		dummy_view_center_forward_xz.x * virtual_forward_xz_length,
+		virtual_forward.y,
+		dummy_view_center_forward_xz.z * virtual_forward_xz_length
+	};
+	// virtual_forward = virtual_forward * 0.1f;// dummy_scale_factor;
+	//const Vector3 virtual_target = (main_target - main_position + dummy_view_center) * 0.1f;
+	//const Vector3 virtual_position = dummy_view_center + virtual_forward; // TODO: rotation
+	
 
-	// XMMATRIX view_matrix_virtual = CameraMath::CalculateViewMatrix(virtual_position, virtual_target, main_up);
-	// comp_camera.SetViewMatrix(view_matrix_virtual);
+	Vector3 virtual_from_center = (main_position - dummy_display_center) * 0.015f; // dummy_scale_factor;
+	float virtual_from_center_xz_length = Vector2{ virtual_from_center.x, virtual_from_center.z }.Length();
+	virtual_from_center = Vector3{
+		dummy_view_center_forward_xz.x * virtual_from_center_xz_length,
+		virtual_from_center.y,
+		dummy_view_center_forward_xz.z * virtual_from_center_xz_length
+	};
+
+
+	const Vector3 virtual_position = dummy_view_center + virtual_from_center;
+	const Vector3 virtual_target = virtual_position - virtual_forward;
+
 	m_transform.SetPosition(virtual_position); // updated to component
 	comp_camera.SetTarget(virtual_target);
 	comp_camera.SetUp(main_up);

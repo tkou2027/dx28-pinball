@@ -58,6 +58,14 @@ public:
     {
 		return AABB(x + offset.x, y + offset.y, z + offset.z);
     }
+    bool Empty() const
+    {
+        return x.Size() <= -Math::EPSILON || y.Size() <= -Math::EPSILON || z.Size() <= -Math::EPSILON;
+	}
+    bool Overlaps(const AABB& other) const
+    {
+		return x.Overlaps(other.x) && y.Overlaps(other.y) && z.Overlaps(other.z);
+	}
 
     // MHOJ Note: this hit function outputs hit interval and no hit record
     // so different from hittable hit,

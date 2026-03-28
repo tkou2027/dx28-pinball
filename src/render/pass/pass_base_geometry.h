@@ -27,5 +27,7 @@ protected:
 	std::vector<size_t> m_mesh_indices_static;
 	std::vector<size_t> m_mesh_indices_skinned;
 	std::vector<size_t> m_mesh_indices_instanced;
+
+	// render states
 	CameraRenderLayer m_curr_render_layer{ CameraRenderLayer::DEFAULT };
 };

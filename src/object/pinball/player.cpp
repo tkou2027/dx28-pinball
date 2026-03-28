@@ -22,6 +22,20 @@
 
 #include "util/debug_ostream.h"
 
+void Player::CreateMaterialDesc(MaterialDesc& material)
+{
+	TechniqueDescDefault material_default{};
+	material_default.shading_model = ShadingModel::UNLIT;
+	material_default.metallic = 1.0f;
+	material_default.roughness = 0.5f;
+	//material_default.emission_color = Vector3{ 1.0f, 1.0f, 1.0f };
+	//material_default.emission_intensity = 2.0f;
+	const auto render_mask = CameraRenderLayerMask::DEFAULT | CameraRenderLayerMask::MONITOR | CameraRenderLayerMask::REFLECTED_PLANE;
+	material.SetTechnique(material_default, render_mask);
+	material.SetTechnique(TechniqueDescDeferredCel{}, render_mask);
+	material.SetTechnique(TechniqueDescForwardSilhouette{});
+}
+
 void Player::Initialize()
 {
 	auto& comp_render_mesh = m_components.Add<ComponentRendererMesh>(m_comp_id_render);
@@ -30,17 +44,29 @@ void Player::Initialize()
 	{
 		const auto& model_desc = GetPresetManager().GetModelDesc("model/character");
 		MaterialDesc material{};
-		TechniqueDescDefault material_default{};
-		material_default.shading_model = ShadingModel::UNLIT;
-		material_default.metallic = 1.0f;
-		material_default.roughness = 0.1f;
-		material.SetTechnique(material_default, CameraRenderLayerMask::DEFAULT | CameraRenderLayerMask::MONITOR);
-		material.SetTechnique(TechniqueDescDeferredCel{}, CameraRenderLayerMask::DEFAULT | CameraRenderLayerMask::MONITOR);
-		material.SetTechnique(TechniqueDescForwardSilhouette{});
+		CreateMaterialDesc(material);
 		Model model{ model_desc, material, &m_transform };
 		//model.GetTransform().SetScale(0.1f);
 		comp_render_mesh.AddModel(model);
 	}
+	//{
+	//	const auto& model_desc = GetPresetManager().GetModelDesc("geo/unit_cube");
+	//	MaterialDesc material{};
+	//	CreateMaterialDesc(material);
+	//	Model model{ model_desc, material, &m_transform };
+	//	model.GetTransform().SetScale(Vector3{ 5.1f, 0.02f, 5.1f });
+	//	model.GetTransform().SetPositionY(1.8f);
+	//	comp_render_mesh.AddModel(model);
+	//}
+	//{
+	//	const auto& model_desc = GetPresetManager().GetModelDesc("geo/unit_cube");
+	//	MaterialDesc material{};
+	//	CreateMaterialDesc(material);
+	//	Model model{ model_desc, material, nullptr };
+	//	model.GetTransform().SetScale(Vector3{ 55.1f, 0.02f, 55.1f });
+	//	model.GetTransform().SetPositionY(10.0f);
+	//	comp_render_mesh.AddModel(model);
+	//}
 	// collision
 	{
 		Sphere sphere{};
@@ -174,7 +200,7 @@ void Player::OnCollisionBumper(const CollisionInfo& collision)
 	case MoveState::DASH:
 	//case MoveState::BOUNCE:
 	{
-		HitEffect();
+		HitEffect(ColliderLayer::Type::BUMPER);
 		auto other_obj = collision.other->GetOwner();
 		auto bumper = std::dynamic_pointer_cast<Bumper>(other_obj.lock());
 		bumper->OnPlayerCollides(true);
@@ -205,7 +231,7 @@ void Player::OnCollisionGoal(const CollisionInfo& collision)
 	goal->OnPlayerEnterFailed(*this);
 	if (IfCollisionSpecial())
 	{
-		HitEffect();
+		HitEffect(ColliderLayer::Type::GOAL);
 		EnterMoveDefault();
 	}
 	// hal::dout << "Player collided with goal" << std::endl;
@@ -219,7 +245,7 @@ void Player::OnTriggerGoal(const CollisionInfo& collision)
 	goal->OnPlayerEnter(*this);
 	if (IfCollisionSpecial())
 	{
-		HitEffect();
+		HitEffect(ColliderLayer::Type::GOAL);
 		EnterMoveDefault();
 	}
 	// hal::dout << "Player collided with goal" << std::endl;
@@ -238,7 +264,7 @@ void Player::OnCollisionEnemy(const CollisionInfo& collision)
 	enemy_center->OnDamaged(damage, collision.hit_info.hit_position);
 	if(IfCollisionSpecial())
 	{
-		HitEffect();
+		HitEffect(ColliderLayer::Type::ENEMY);
 		EnterMoveDefault();
 	}
 }
@@ -252,6 +278,12 @@ bool Player::IfCollisionSpecial() const
 float Player::GetSpeedLevel() const
 {
 	return m_speed_level;
+}
+
+Vector3 Player::GetVelocityExpected() const
+{
+	auto& collider = m_components.Get<ComponentCollider>(m_comp_id_collider).GetCollider(0);
+	return collider.velocity;
 }
 
 void Player::EnterMoveDefault()
@@ -456,17 +488,19 @@ bool Player::CheckEnterBounce()
 //	// no input? small acc?
 //}
 
-void Player::HitEffect()
+void Player::HitEffect(ColliderLayer::Type layer)
 {
 	int se = g_global_context.m_audio_manager->LoadSoundEffect(SoundEffectName::CLEAR);
 	g_global_context.m_sound->PlaySoundLoop(se, 0);
 
-	//auto camera = m_camera.lock();
-	//CameraFollow::CameraShakeConfig shake_config{ {6.0f, 6.0f, 6.0f}, 0.2f };
-	//camera->SetShake(shake_config);
+	auto camera = m_camera.lock();
+	const float shake_strength = layer == ColliderLayer::Type::BUMPER ? 0.0f : 2.0f;
+	CameraFollow::CameraShakeConfig shake_config{ Vector3{1.0f, 1.0f, 1.0f} * shake_strength, 0.2f };
+	camera->SetShake(shake_config);
 
 	auto hit_stop_updater = m_hit_stop_updater.lock();
-	hit_stop_updater->SetHitStop(0.1f);
+	const float hit_stop_duration = layer == ColliderLayer::Type::BUMPER ? 0.1f : 0.2f;
+	hit_stop_updater->SetHitStop(hit_stop_duration);
 }
 
 void Player::RotateToMoveDirection(const Vector3& move_dir)
@@ -475,18 +509,15 @@ void Player::RotateToMoveDirection(const Vector3& move_dir)
 	{
 		return;
 	}
-	Vector3 target_fwd = move_dir;
-	target_fwd.x = -target_fwd.x;
-	target_fwd.Normalize();
-	// quats
-	// auto q_current = m_transform.GetRotation().ToXMVECTOR();
-	auto up = DirectX::XMVectorSet(0, 1, 0, 0);
-	DirectX::XMVECTOR q_target = DirectX::XMQuaternionRotationMatrix(
-		DirectX::XMMatrixLookToLH(DirectX::g_XMZero, target_fwd.ToXMVECTOR(), up)
-	);
+	float target_yaw = atan2f(move_dir.x, move_dir.z);
+
+	DirectX::XMVECTOR q_current = m_transform.GetRotation().ToXMVECTOR();
+	DirectX::XMVECTOR q_target = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0, 1, 0, 0), target_yaw);
+	float t = m_move_config.rotation_speed * GetDeltaTime();
+	DirectX::XMVECTOR q_result = DirectX::XMQuaternionSlerp(q_current, q_target, t);
 
 	Vector4 rotation_target{};
-	rotation_target.LoadXMVECTOR(q_target);
+	rotation_target.LoadXMVECTOR(q_result);
 	m_transform.SetRotation(rotation_target);
 }
 

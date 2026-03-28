@@ -3,7 +3,7 @@
 #include "global_context.h"
 #include "platform/keyboard.h"
 
-#include "shader_setting.h"
+#include "render/shader_setting.h"
 
 using namespace DirectX;
 
@@ -18,8 +18,6 @@ void Camera::Initialize()
 
 void Camera::Update()
 {
-	m_config.fov = g_shader_setting.camera_fov;
-
 	Vector3 pos{ m_transform.GetPosition() };
 	//if (g_global_context.m_keyboard->IsKeyDown(KK_Q))
 	//{

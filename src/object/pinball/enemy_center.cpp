@@ -28,9 +28,22 @@ void EnemyCenter::OnSceneInitialized()
 	m_player = player;
 }
 
+void EnemyCenter::OnEnterUpdateLayer(UpdateLayer layer)
+{
+	switch (layer)
+	{
+	case UpdateLayer::HIT_STOP:
+	{
+		UpdateAimCameraFollow(0.0f);
+		break;
+	}
+	}
+}
+
 void EnemyCenter::InitializeConfig(const EnemyCenterConfig& enemy_config, std::weak_ptr<Room> room)
 {
 	m_config = enemy_config;
+	EnemyCenterVisual::AdjustShapeConfig(m_config.shape);
 	m_room = room;
 	InitializeCollision();
 	InitializeVisual();
@@ -122,13 +135,6 @@ void EnemyCenter::OnDamaged(float damage, const Vector3& position)
 		hurt_direction.Normalize();
 		m_status.aim_position = m_config.shape.position + hurt_direction * m_config.shape.side_radius;
 		// radius from 0
-		m_status.aim_radius_start = 0.0f;
-		m_status.aim_radius_end = m_config.aim_ui.radius_max;
-		m_status.aim_radius = m_status.aim_radius_start;
-		// thickness from 0
-		m_status.aim_thickness_start = 0.0f;
-		m_status.aim_thickness_end = m_config.aim_ui.thickness_max;
-		m_status.aim_thickness = m_status.aim_thickness_start;
 		UpdateAimCameraFollow();
 		UpdateAimUIFollow();
 		UpdateAimVisuals();
@@ -179,7 +185,7 @@ void EnemyCenter::InitializeStatus()
 	status_ui->InitializeConfig(m_config.health);
 	m_status_ui = status_ui;
 	auto main_ui = GetOwner().CreateGameObject<ScreenMainUI>();
-	main_ui->InitializeConfig(m_config.health);
+	main_ui->InitializeConfig(m_config.shape);
 	m_main_ui = main_ui;
 	auto camera_scan_dummy = GetOwner().CreateGameObject<CameraScanDummy>();
 	auto camera_scan = GetOwner().CreateGameObject<CameraScan>();
@@ -230,6 +236,7 @@ void EnemyCenter::EnterAttackPrepare()
 	auto& phase_config = m_config.attack_phases[m_status.attack_phase_index];
 	auto& attack_config = phase_config.attacks[m_status.attack_index];
 	// initialize attack visuals
+	m_main_ui.lock()->EnterActiveState(ScreenMainUI::ActiveState::COOLDOWN);
 	// initialize timers
 	m_status.attack_countdown.Initialize(attack_config.prepare_duration);
 }
@@ -244,7 +251,6 @@ void EnemyCenter::UpdateAttackPrepare()
 	}
 	// update aim position
 	UpdateAimCameraFollow();
-
 	// update aim visuals
 	UpdateAimVisuals();
 }
@@ -268,8 +274,8 @@ void EnemyCenter::UpdateAttackFollow()
 		EnterAttackExecute();
 		return;
 	}
-	// update aim position
-	UpdateAimCameraFollow();
+	
+	UpdateAimCameraFollow(); // update aim position
 	// update aim visuals
 	UpdateAimVisuals();
 }
@@ -315,6 +321,7 @@ void EnemyCenter::EnterAttackCooldown()
 		bumper->EnterActive();
 		m_active_bumpers.push_back(bumper);
 	}
+	// ui animations
 }
 
 void EnemyCenter::UpdateAttackCooldown()
@@ -327,6 +334,9 @@ void EnemyCenter::UpdateAttackCooldown()
 		EnterAttackPrepare();
 		return;
 	}
+	UpdateAimCameraFollow(); // update aim position
+	// update aim visuals
+	UpdateAimVisuals();
 }
 
 void EnemyCenter::ExitAttackCooldown()
@@ -338,23 +348,13 @@ void EnemyCenter::UpdateNextAttack()
 {
 	auto& phase_config = m_config.attack_phases[m_status.attack_phase_index];
 	m_status.attack_index = (m_status.attack_index + 1) % phase_config.attacks.size();
-	//if (m_status.attack_index >= static_cast<int>(phase_config.attacks.size()))
-	//{
-	//	// next phase
-	//	m_status.attack_phase_index++;
-	//	m_status.attack_index = 0;
-	//	if (m_status.attack_phase_index >= static_cast<int>(m_config.attack_phases.size()))
-	//	{
-	//		// loop to first phase
-	//		m_status.attack_phase_index = 0;
-	//	}
-	//}
 }
 
 void EnemyCenter::EnterHurt()
 {
 	m_state = EnemyState::HURT;
 	m_status.state_countdown.Initialize(m_config.damage_delay);
+	m_main_ui.lock()->EnterActiveState(ScreenMainUI::ActiveState::HURT);
 }
 
 void EnemyCenter::UpdateHurt()
@@ -363,13 +363,16 @@ void EnemyCenter::UpdateHurt()
 	// clear all bumpers
 	if (t <= 0.0f)
 	{
+		// stage effect
+		float curr_health_ratio = m_status.health / m_config.health;
+		float stage_ratio = 1.0f - (m_status.health_index + 1.0f) * (1.0f / m_config.shape.sides);
+		if (curr_health_ratio <= stage_ratio)
+		{
+			// handle stage effect
+			m_visual.lock()->SetScreenCrushed(m_status.health_index);
+			m_status.health_index++;
+		}
 		// return to attack state
-		m_status.aim_radius_start = 0.0f;
-		m_status.aim_radius_end = 0.0f;
-		m_status.aim_thickness_start = 0.0f;
-		m_status.aim_thickness_end = 0.0f;
-		m_status.aim_radius = 0.0f;
-		m_status.aim_thickness = 0.0f;
 		UpdateAimVisuals();
 		DestroyBumpers();
 		if (m_status.health <= 0)
@@ -383,23 +386,21 @@ void EnemyCenter::UpdateHurt()
 		}
 		return;
 	}
-	if (t < 0.5)
-	{
-		t = 1.0f - t;
-	}
-	float t_lerp = Tween::EaseFunc(Tween::TweenFunction::EASE_OUT_QUAD, (1.0f - t) * 2.0f);
-	m_status.aim_radius = Math::Lerp(m_status.aim_radius_start, m_status.aim_radius_end, t_lerp);
-	m_status.aim_thickness = Math::Lerp(m_status.aim_thickness_start, m_status.aim_thickness_end, t_lerp);
 	UpdateAimCameraFollow();
 	UpdateAimVisuals();
 }
 
-void EnemyCenter::UpdateAimCameraFollow()
+void EnemyCenter::UpdateAimCameraFollow(float velocity_offset)
 {
 	auto player = m_player.lock();
 	m_status.aim_position = player->GetTransform().GetPositionGlobal()
+		+ player->GetVelocityExpected() * velocity_offset // predict movement
 		+ m_config.aim_offset; // player offset
-	m_status.aim_player_rotation = player->GetTransform().GetRotationYGlobal();
+	m_status.aim_player_forward = player->GetTransform().GetForwardGlobal();
+
+	// update to camera
+	auto camera_scan_dummy = m_camera_scan_dummy.lock();
+	camera_scan_dummy->SetViewCenter(m_status.aim_position, m_status.aim_player_forward);
 }
 
 void EnemyCenter::UpdateAimUIFollow()
@@ -412,20 +413,13 @@ void EnemyCenter::UpdateAimVisuals()
 {
 	// update screen ui
 	// calculate position
-	float rotation_ratio = (m_status.aim_ui_rotation + Math::PI * 0.25f) / (2.0f * Math::PI); // screen is rotated
+	float rotation_ratio = 1.0f - (m_status.aim_ui_rotation - Math::PI * 0.75f) / Math::TWO_PI; // screen is rotated
 	// update aim to screen ui
 	auto main_ui = m_main_ui.lock();
 	ScreenMainUI::AimInfo aim_info{};
 	aim_info.rotation_ratio = rotation_ratio;
 	aim_info.height_ratio = 0.5f;
-	aim_info.radius = m_status.aim_radius;
-	aim_info.thickness = m_status.aim_thickness;
-	// TODO: radius and thickness
 	main_ui->SetAimInfo(aim_info);
-
-	// update focus
-	auto camera_scan_dummy = m_camera_scan_dummy.lock();
-	camera_scan_dummy->SetViewCenter(m_status.aim_position, m_status.aim_player_rotation);
 }
 
 void EnemyCenter::DestroyBumpers()

@@ -1,6 +1,5 @@
 #pragma once
 #include "render/pass/pass_base.h"
-#include "render/resource/render_attachment.h"
 class PassBlurDual : public PassBase
 {
 public:

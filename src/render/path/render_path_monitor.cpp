@@ -72,20 +72,12 @@ void RenderPathMonitor::InitializeViewContext(RenderViewKey view_key, uint32_t w
 	m_texture_resources.emplace(view_key, textures);
 }
 
-void RenderPathMonitor::UpdateVisibleRenderables(
-	const SceneRenderablesManager& scene_renderables, CameraRenderLayer render_layer)
+void RenderPathMonitor::UpdateViewContext(const RenderPathViewContext& view_context)
 {
-	// static int evil_cnt{ 0 };
-	// if (evil_cnt == 1)
-	// {
-	// 	evil_cnt = 0;
-	// 	return;
-	// }
-	// evil_cnt = 1;
-
-	auto start = std::chrono::high_resolution_clock::now();
-
+	m_view_context = view_context;
+	auto& scene_renderables = g_global_context.m_render_system->GetRenderScene().GetRenderablesManager();
 	const auto& material_resource = g_global_context.m_render_system->GetRenderResource().GetMaterialManager();
+	const auto render_layer = m_view_context.render_layer;
 	const auto& visible_info = scene_renderables.GetRenderablesOfLayer(render_layer);
 
 	m_pass_geometry.ResetRenderableIndices(render_layer);
@@ -101,10 +93,6 @@ void RenderPathMonitor::UpdateVisibleRenderables(
 		m_pass_forward.AddRenderableIndex(index, model_info.key.model_type, material);
 		m_pass_sky.AddRenderableIndex(index, model_info.key.model_type, material);
 	}
-
-	auto finish = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
-	hal::dout << "updating view" << duration.count() << " " << std::endl;
 }
 
 void RenderPathMonitor::BuildRenderTargets(const InternalTextures& textures, uint32_t width, uint32_t height)
@@ -165,7 +153,7 @@ void RenderPathMonitor::Draw(RenderViewKey view_key, const ViewContext& view_con
 	BuildRenderTargets(textures, width, height);
 
 	ID3D11DeviceContext* context = GetDeviceContext();
-	float clear_color[4]{ 0.0f, 0.0f, 0.0f, 0.0f }; // must be zero for proper blending
+	float clear_color[4]{ 0.0f, 0.0f, 0.0f, 1.0f }; // must be zero for proper blending
 
 	m_gpu_timers[0].Start();
 
@@ -194,7 +182,7 @@ void RenderPathMonitor::Draw(RenderViewKey view_key, const ViewContext& view_con
 	m_pass_deferred_shading.Draw();
 	m_render_targets.deferred_shading.Unbind(context);
 
-	
+
 	//m_pass_deferred_shading.Draw();
 
 	m_gpu_timers[0].Stop();

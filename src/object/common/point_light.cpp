@@ -42,6 +42,12 @@ void PointLight::SetColor(const Vector3& color)
 	material.emission_color = color;
 }
 
+void PointLight::Update()
+{
+	// editor
+	m_transform.SetPosition(m_position);
+}
+
 void PointLight::SetLightActive(bool active)
 {
 	auto& light = m_components.Get<ComponentLight>(m_comp_id_light);

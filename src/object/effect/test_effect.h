@@ -48,11 +48,10 @@ public:
 
 		{
 			auto& comp = m_components.Add<ComponentRendererParticle>(m_comp_id_particle);
-			auto& particle_item = comp.GetTextureParticleItem();
-			TextureParticleConfig conf{
-			   TextureParticleShape::PLANE,
-			   64, 256
-			};
+			EmitterDesc conf{};
+			conf.shape = TextureParticleShape::PLANE;
+			conf.num_width = 64;
+			conf.num_height = 256;
 			auto& texture_loader = GetTextureLoader();
 			conf.texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/bg_texture_color.png");
 			conf.local_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pixel_mask.png");
@@ -63,13 +62,8 @@ public:
 			float size = 10.0f;
 			transform.SetPositionY(-size * 2.0f);
 			transform.SetScale({ size, size * 4.0f, size });
-			particle_item.SetConfig(
-				conf,
-				UVFrameAnimationDesc{},
-				transform
-			);
+			comp.InitializeEmitter(conf, transform);
 			m_crushed = false;
-			particle_item.InitializeParticle();
 
 			comp.SetActive(false);
 		}
@@ -80,8 +74,6 @@ public:
 	void Update() override
 	{
 		auto& comp_render_particle = m_components.Get<ComponentRendererParticle>(m_comp_id_particle);
-		auto& particle_item = comp_render_particle.GetTextureParticleItem();
-		particle_item.Update();
 
 		auto& comp_render_mesh = m_components.Get<ComponentRendererMesh>(m_comp_id_mesh);
 		
@@ -91,12 +83,13 @@ public:
 			{
 				comp_render_mesh.SetActive(false);
 				comp_render_particle.SetActive(true);
-				particle_item.EnterUpdateCrush();
+				comp_render_particle.InitializeBurst();
 				m_crushed = true;
 			}
 			else
 			{
-				particle_item.ResetParticle();
+				// particle_item.ResetParticle();
+
 				comp_render_mesh.SetActive(true);
 				comp_render_particle.SetActive(false);
 				m_crushed = false;

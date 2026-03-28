@@ -60,12 +60,7 @@ void VertexCommon::DrawModelStatic(ID3D11DeviceContext* context, ModelRenderInfo
 	for (const auto& mesh_data : model_data.meshes)
 	{
 		// TODO: binding based on material
-		if (model_data.textures.size() > 0)
-		{
-			context->PSSetShaderResources(0, 1, model_data.textures[mesh_data.m_material_index].m_diffuse.GetAddressOf());
-			context->PSSetShaderResources(3, 1, model_data.textures[mesh_data.m_material_index].m_metallic.GetAddressOf());
-		}
-
+		BindPerMeshMaterial(context, model_data, mesh_data);
 		SetupVertexBuffer(context, mesh_data, input_layout_type);
 		context->IASetIndexBuffer(
 			mesh_data.m_indices.Get(),
@@ -88,16 +83,7 @@ void VertexCommon::DrawModelSkinned(
 	for (const auto& mesh_data : model_data.meshes)
 	{
 		// TODO: binding based on material
-		if (model_data.textures.size() > 0)
-		{
-			context->PSSetShaderResources(0, 1, model_data.textures[mesh_data.m_material_index].m_diffuse.GetAddressOf());
-		}
-		//ID3D11Buffer* pVBs[] = { mesh_data.m_positions.Get(), mesh_data.m_normals.Get(),
-		//	mesh_data.m_pTexcoordArrays.size() > 0 ? mesh_data.m_pTexcoordArrays[0].Get() : nullptr,
-		//	 model_data_skinned.meshes_skinned[mesh_index].bone_ids.Get(),  model_data_skinned.meshes_skinned[mesh_index].bone_weights.Get() };
-		//uint32_t strides[] = { 12, 12, 8, 16, 16 };
-		//uint32_t offsets[] = { 0, 0, 0, 0, 0 };
-		// context->IASetVertexBuffers(0, ARRAYSIZE(pVBs), pVBs, strides, offsets);
+		BindPerMeshMaterial(context, model_data, mesh_data);
 		SetupVertexBuffer(context, mesh_data, model_data_skinned.meshes_skinned[mesh_index], input_layout_type);
 		context->IASetIndexBuffer(
 			mesh_data.m_indices.Get(),
@@ -109,7 +95,7 @@ void VertexCommon::DrawModelSkinned(
 
 void VertexCommon::DrawModelInstanced(
 	ID3D11DeviceContext* context, const std::vector<ModelRenderInfo> models,
-		unsigned int start_index, unsigned int end_index_exclude, Shader::InputLayoutType input_layout_type)
+	unsigned int start_index, unsigned int end_index_exclude, Shader::InputLayoutType input_layout_type)
 {
 	if (models.empty() || end_index_exclude <= start_index)
 	{
@@ -143,10 +129,7 @@ void VertexCommon::DrawModelInstanced(
 	for (const auto& mesh_data : model_data.meshes)
 	{
 		// TODO: binding based on material
-		if (model_data.textures.size() > 0)
-		{
-			context->PSSetShaderResources(0, 1, model_data.textures[mesh_data.m_material_index].m_diffuse.GetAddressOf());
-		}
+		BindPerMeshMaterial(context, model_data, mesh_data);
 		SetupVertexBuffer(context, mesh_data, input_layout_type);
 		context->IASetIndexBuffer(
 			mesh_data.m_indices.Get(),
@@ -189,9 +172,28 @@ ModelLoader& VertexCommon::GetModelLoader()
 	return g_global_context.m_render_system->GetRenderResource().GetModelLoader();
 }
 
+void VertexCommon::BindPerMeshMaterial(ID3D11DeviceContext* context, const ModelData& model_data, const MeshData& mesh_data)
+{
+	if (model_data.textures.size() > 0)
+	{
+		context->PSSetShaderResources(0, 1, model_data.textures[mesh_data.m_material_index].m_diffuse.GetAddressOf());
+		if (model_data.textures[mesh_data.m_material_index].m_emissive)
+		{
+			context->PSSetShaderResources(1, 1, model_data.textures[mesh_data.m_material_index].m_emissive.GetAddressOf());
+		}
+		if (model_data.textures[mesh_data.m_material_index].m_metallic)
+		{
+			context->PSSetShaderResources(3, 1, model_data.textures[mesh_data.m_material_index].m_metallic.GetAddressOf());
+		}
+	}
+}
+
 void VertexCommon::SetupVertexBuffer(
 	ID3D11DeviceContext* context, const MeshData& mesh_data, Shader::InputLayoutType input_layout_type)
 {
+
+	auto& render_resource = g_global_context.m_render_system->GetRenderResource();
+	auto& dummy_vertex_buffers = render_resource.m_dummy_vertex_buffers;
 	switch (input_layout_type)
 	{
 	case Shader::InputLayoutType::MESH_STATIC:
@@ -199,12 +201,18 @@ void VertexCommon::SetupVertexBuffer(
 	{
 		ID3D11Buffer* pVBs[] = {
 			mesh_data.m_positions.Get(),
-			mesh_data.m_pTexcoordArrays.size() > 0 ? mesh_data.m_pTexcoordArrays[0].Get() : nullptr,
-			mesh_data.m_normals.Get(),
-			mesh_data.m_tangents.Get(),
-			mesh_data.m_colors.Get()
+			mesh_data.m_pTexcoordArrays.size() > 0 ? mesh_data.m_pTexcoordArrays[0].Get() : dummy_vertex_buffers.uv.Get(),
+			mesh_data.m_normals.Get() ? mesh_data.m_normals.Get() : dummy_vertex_buffers.normal.Get(),
+			mesh_data.m_tangents.Get() ? mesh_data.m_tangents.Get() : dummy_vertex_buffers.tangent.Get(),
+			mesh_data.m_colors.Get() ? mesh_data.m_colors.Get() : dummy_vertex_buffers.color.Get()
 		};
-		uint32_t strides[] = { 12, 8, 12, 12, 16 };
+		uint32_t strides[] = {
+			12u,
+			mesh_data.m_pTexcoordArrays.size() > 0 ? 8u : 0u,
+			mesh_data.m_normals.Get() ? 12u : 0u,
+			mesh_data.m_tangents.Get() ? 12u : 0u,
+			mesh_data.m_colors.Get() ? 16u : 0u
+		};
 		uint32_t offsets[] = { 0, 0, 0, 0, 0 };
 		context->IASetVertexBuffers(0, ARRAYSIZE(pVBs), pVBs, strides, offsets);
 		break;
@@ -221,20 +229,29 @@ void VertexCommon::SetupVertexBuffer(
 void VertexCommon::SetupVertexBuffer(ID3D11DeviceContext* context,
 	const MeshData& mesh_data, const MeshDataSkinned mesh_data_skinned, Shader::InputLayoutType input_layout_type)
 {
+	auto& render_resource = g_global_context.m_render_system->GetRenderResource();
+	auto& dummy_vertex_buffers = render_resource.m_dummy_vertex_buffers;
 	switch (input_layout_type)
 	{
 	case Shader::InputLayoutType::MESH_SKINNED:
 	{
 		ID3D11Buffer* pVBs[] = {
 			mesh_data.m_positions.Get(),
-			mesh_data.m_pTexcoordArrays.size() > 0 ? mesh_data.m_pTexcoordArrays[0].Get() : nullptr,
-			mesh_data.m_normals.Get(),
-			mesh_data.m_tangents.Get(),
-			mesh_data.m_colors.Get(),
+			mesh_data.m_pTexcoordArrays.size() > 0 ? mesh_data.m_pTexcoordArrays[0].Get() : dummy_vertex_buffers.uv.Get(),
+			mesh_data.m_normals.Get() ? mesh_data.m_normals.Get() : dummy_vertex_buffers.normal.Get(),
+			mesh_data.m_tangents.Get() ? mesh_data.m_tangents.Get() : dummy_vertex_buffers.tangent.Get(),
+			mesh_data.m_colors.Get() ? mesh_data.m_colors.Get() : dummy_vertex_buffers.color.Get(),
 			mesh_data_skinned.bone_ids.Get(),
 			mesh_data_skinned.bone_weights.Get()
 		};
-		uint32_t strides[] = { 12, 8, 12, 12, 16, 16, 16 };
+		uint32_t strides[] = {
+	12u,
+	mesh_data.m_pTexcoordArrays.size() > 0 ? 8u : 0u,
+	mesh_data.m_normals.Get() ? 12u : 0u,
+	mesh_data.m_tangents.Get() ? 12u : 0u,
+	mesh_data.m_colors.Get() ? 16u : 0u,
+	16, 16
+		};
 		uint32_t offsets[] = { 0, 0, 0, 0, 0, 0, 0 };
 		context->IASetVertexBuffers(0, ARRAYSIZE(pVBs), pVBs, strides, offsets);
 		break;

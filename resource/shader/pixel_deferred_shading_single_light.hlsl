@@ -28,7 +28,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
 {
     PixelOut pixel_out;
     
-    float2 screen_uv = pixel_in.position_h.xy / float2(1600, 900); // / pixel_in.position_h.w;
+    float2 screen_uv = pixel_in.position_h.xy / float2(g_screen_width, g_screen_height); // / pixel_in.position_h.w;
     // screen_uv = screen_uv * float2(0.5, -0.5) + 0.5f;
     SurfaceData surface_w = GetSurfaceDataWorldFromGBuffer(screen_uv, g_matrix_view_proj_inverse);
 
@@ -37,17 +37,8 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     if (shading_model == 0)
     {        
         LightPoint light = g_lights.point_light[pixel_in.instance_id];
-        //float3 to_light = light.position_w - surface_w.position.xyz;
-        //if (dot(to_light, to_light) > 100.0f) // TODO
-        //{
-        //    discard;
-        //}
-        
         float3 view_dir = normalize(g_view_position_w - surface_w.position.xyz);
-        // color.rgb = ComputeShadingBlinnPhongPoint(surface_w, light, view_dir);
         color.rgb = ComputeShadingCookTorrancePointLight(surface_w, light, view_dir);
-        // color.rgb = surface_w.normal;
-        // color.rgb = surface_w.position.xyz;
         color.w = surface_w.albedo.w;
     }
     else

@@ -5,7 +5,6 @@
 #endif
 
 #include "common/common_buffer_mesh.hlsli"
-#include "common_cel.hlsli"
 
 // #define USE_VERTEX_OUT_POS_TEX_LIGHTING
 // #include "common/common_vertex_out.hlsli"

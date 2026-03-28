@@ -255,7 +255,8 @@ void Bumper::InitializeVisual()
 	{
 		auto& light = m_components.Get<ComponentLight>(m_comp_id_light);
 		light.SetActive(true);
-		light.SetColor(Vector3{ 0.48627f,  0.74902f,  0.74902f } * 6.0f);	
+		light.SetColor(Vector3{ 0.48627f,  0.74902f,  0.74902f } * 20.0f);
+		light.SetAttenuationRadius(15.0f);
 	}
 
 	// center

@@ -10,7 +10,7 @@ public:
 	void Draw() override;
 private:
 	void SetInfoPerDraw();
-	void DrawItem(const class TextureParticleItem& item);
+	void DrawParticles(const struct EmitterData& emitter);
 	void ResetPerDraw();
 
 	Shader::VertexShaderInputLayout m_vs;
@@ -19,4 +19,5 @@ private:
 	// quad buffers for instancing
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vb_quad{};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_ib_quad{};
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cb_plane_common{};
 };

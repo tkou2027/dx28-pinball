@@ -5,6 +5,8 @@
 #include "render/render_resource.h"
 #include "util/debug_ostream.h"
 #include "render/pass/forward/subpass_forward_screen_background.h"
+#include "render/pass/forward/subpass_forward_screen_projection.h"
+#include "render/pass/forward/subpass_forward_unlit.h"
 
 void RenderPathScreenContent::Initialize()
 {
@@ -12,6 +14,9 @@ void RenderPathScreenContent::Initialize()
 	ID3D11DeviceContext* context = GetDeviceContext();
 
 	m_pass_forward.Initialize(device, context);
+
+	m_pass_forward.AddSubPass(std::make_unique<SubPassForwardScreenProjection>(), PassForward::SubPassQueue::DEFAULT);
+	m_pass_forward.AddSubPass(std::make_unique<SubPassForwardUnlit>(), PassForward::SubPassQueue::DEFAULT);
 	m_pass_forward.AddSubPass(std::make_unique<SubPassForwardScreenBackground>(), PassForward::SubPassQueue::DEFAULT);
 	m_pass_sprite.Initialize(device, context);
 
@@ -23,10 +28,12 @@ void RenderPathScreenContent::Initialize()
 
 void RenderPathScreenContent::InitializeViewContext(RenderViewKey view_key, uint32_t width, uint32_t height) {}
 
-void RenderPathScreenContent::UpdateVisibleRenderables(
-	const SceneRenderablesManager& scene_renderables, CameraRenderLayer render_layer)
+void RenderPathScreenContent::UpdateViewContext(const RenderPathViewContext& view_context)
 {
+	m_view_context = view_context;
+	auto& scene_renderables = g_global_context.m_render_system->GetRenderScene().GetRenderablesManager();
 	const auto& material_resource = g_global_context.m_render_system->GetRenderResource().GetMaterialManager();
+	const auto render_layer = m_view_context.render_layer;
 	const auto& visible_info = scene_renderables.GetRenderablesOfLayer(render_layer);
 
 	m_pass_sprite.SetRenderLayer(render_layer);
@@ -47,9 +54,9 @@ void RenderPathScreenContent::Draw(RenderViewKey view_key, const ViewContext& vi
 	view_context.render_target_out.ClearColor(context, clear_color);
 	view_context.render_target_out.ClearDepthStencil(context, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL);
 	view_context.render_target_out.Bind(context);
-	m_pass_sprite.Draw();
 	m_pass_forward.SetDrawingQueue(PassForward::SubPassQueue::DEFAULT);
 	m_pass_forward.Draw();
+	m_pass_sprite.Draw();
 }
 
 void RenderPathScreenContent::Finalize()

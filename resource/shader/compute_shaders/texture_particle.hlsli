@@ -4,8 +4,12 @@ struct TextureParticle
 {
     float3 position;
     float3 velocity;
-    //float3 normal;
+
     float2 uv;
+
+    float3 right;
+    float3 up;
+
     float life;
     float delay;
 };

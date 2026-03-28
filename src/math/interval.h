@@ -28,6 +28,10 @@ public:
 	{
 		return x > m_min && x < m_max;
 	}
+	bool Overlaps(const Interval& other) const
+	{
+		return !(m_max < other.m_min || m_min > other.m_max);
+	}
 	float Clamp(float x) const
 	{
 		return x < m_min ? m_min : (x > m_max ? m_max : x);

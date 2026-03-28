@@ -13,7 +13,6 @@ public:
 	};
 	void Initialize();
 	void InitializeConfig(const EnemyCenterShapeConfig& shape_config);
-	void SetAimInfo(const AimInfo& aim_info);
 	static void AdjustShapeConfig(EnemyCenterShapeConfig& in_out_shape_config);
 	void SetScreenCrushed(int index);
 private:

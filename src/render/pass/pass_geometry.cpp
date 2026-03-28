@@ -12,8 +12,8 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 using namespace DirectX;
 

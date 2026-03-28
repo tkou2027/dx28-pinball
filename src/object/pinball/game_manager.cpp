@@ -25,15 +25,14 @@
 
 void GameManager::Initialize()
 {
-
 	// main camera
 	auto camera = GetOwner().CreateGameObject<CameraFollow>();
 	m_camera_main = camera;
-	// auto camera_monitor = GetOwner().CreateGameObject<CameraMonitor>();
+
 	auto camera_screen = GetOwner().CreateGameObject<CameraScreenMain>();
 	auto camera_screen_status = GetOwner().CreateGameObject<CameraScreenStatus>();
 	auto camera_reflect = GetOwner().CreateGameObject<CameraReflect>();
-	// auto screen_status_ui = GetOwner().CreateGameObject<ScreenStatusUI>();
+
 	auto bumper_manager = GetOwner().CreateGameObject<BumperManager>();
 	bumper_manager->InitializeConfig(g_field_config);
 
@@ -80,7 +79,6 @@ void GameManager::Update()
 	auto camera = m_camera_main.lock();
 	camera->SetCameraShapeConfig(camera->GetCameraShapeConfig());
 }
-
 
 void GameManager::GetEditorItem(std::vector<EditorItem>& items)
 {

@@ -98,21 +98,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depth_stencil;
 };
 
-struct ViewObjects
-{
-	std::vector<ModelRenderInfo* > objects_static;
-	std::vector<ModelRenderInfo* > objects_skinned;
-};
-
 struct ViewContext
 {
-	// camera constant buffers
-	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer_per_projection;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer_per_view;
-
 	// RenderTarget
 	RenderTarget render_target_out;
 
-	// visible(TODO: not implemented) objects
-	ViewObjects view_objects;
+	// other states
 };

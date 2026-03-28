@@ -22,14 +22,15 @@ void main(uint3 id : SV_DispatchThreadID)
     uint index = id.y * g_width + id.x;
 
     float2 uv = (float2(id.xy) + 0.5) / float2(g_width, g_height);
-    uv.y = 1.0 - uv.y;
 
     float3 pos;
+    float3 right = normalize(float3(g_matrix_model[0][0], g_matrix_model[1][0], g_matrix_model[2][0]));
+    float3 up = normalize(float3(g_matrix_model[0][1], g_matrix_model[1][1], g_matrix_model[2][1]));
     // [branch]ÅH
     if (g_shape_type == SHAPE_PLANE)
     {
         pos.x = lerp(-0.5, 0.5, uv.x);
-        pos.y = lerp(1.0, 0.0, uv.y);
+        pos.y = lerp(0.5f, -0.5, uv.y);
         pos.z = 0.0;
     }
     else if (g_shape_type == SHAPE_CYLINDER)
@@ -37,7 +38,7 @@ void main(uint3 id : SV_DispatchThreadID)
         float theta = -uv.x * 2.0 * 3.14159265;
         pos.x = sin(theta);
         pos.z = cos(theta);
-        pos.y = lerp(-0.5f, 0.5f, uv.y);
+        pos.y = lerp(0.5, -0.5, uv.y);
     }
     
     float4 pos_w = mul(float4(pos, 1.0), g_matrix_model);
@@ -46,8 +47,11 @@ void main(uint3 id : SV_DispatchThreadID)
     p.position = pos_w.xyz;
     p.velocity = float3(0, 0, 0);
     p.uv = uv;
+    // p.color = float4(1, 1, 1, 1);
     p.life = 1e9;
-    p.delay = 1.0f - uv.y;
+    p.delay = uv.y;
+    p.right = right;
+    p.up = up;
 
     g_particles[index] = p;
 }

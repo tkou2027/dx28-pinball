@@ -7,8 +7,8 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 #include "config/palette.h"
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 namespace
 {
@@ -60,7 +60,7 @@ void SubPassForwardScreenBackground::SetInfoPerDraw()
 	m_context->PSSetConstantBuffers(0, 1, m_cb.GetAddressOf());
 	// om
 	m_context->OMSetDepthStencilState(render_states.m_dss_depth_disabled.Get(), 0);
-	m_context->OMSetBlendState(render_states.m_bs_disabled.Get(),
+	m_context->OMSetBlendState(render_states.m_bs_alpha.Get(),
 		render_states.m_blend_factor_zero, render_states.m_sample_mask_all);
 }
 

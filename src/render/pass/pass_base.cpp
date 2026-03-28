@@ -4,7 +4,9 @@
 #include "global_context.h"
 #include "render/render_system.h"
 #include "render/render_resource.h"
-#include "render/dx_trace.h"
+#include "render/render_path.h"
+#include "render/render_states.h"
+#include "render/util/dx_trace.h"
 #include "config/constant.h" // TODO
 #include "render/config/model_state.h"
 
@@ -59,6 +61,53 @@ int PassBase::GetScreenWidth() const
 int PassBase::GetScreenHeight() const
 {
 	return SCREEN_HEIGHT;
+}
+
+const RenderPathBase& PassBase::GetActiveRenderPath() const
+{
+	return g_global_context.m_render_system->GetRenderPathManager().GetActiveRenderPath();
+}
+
+void PassBase::SetCullState(CullType type) const
+{
+	// invert culling
+	const auto& path_view_context = GetActiveRenderPath().GetViewContext();
+	if (path_view_context.invert_culling)
+	{
+		switch (type)
+		{
+		case CullType::CULL_BACK:
+		{
+			type = CullType::CULL_FRONT;
+			break;
+		}
+		case CullType::CULL_FRONT:
+		{
+			type = CullType::CULL_BACK;
+			break;
+		}
+		}
+	}
+	// set cull state
+	const auto& render_states = GetRenderStates();
+	switch (type)
+	{
+	case CullType::CULL_BACK:
+	{
+		m_context->RSSetState(render_states.m_rs_cull_back.Get());
+		break;
+	}
+	case CullType::CULL_FRONT:
+	{
+		m_context->RSSetState(render_states.m_rs_cull_front.Get());
+		break;
+	}
+	case CullType::CULL_NONE:
+	{
+		m_context->RSSetState(render_states.m_rs_cull_none.Get());
+		break;
+	}
+	}
 }
 
 ComPtr<ID3D11Buffer> PassBase::CreateConstantBuffer(size_t size) const

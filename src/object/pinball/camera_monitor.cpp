@@ -19,18 +19,23 @@ void CameraMonitor::Initialize()
 	config.render_path_id = camera_preset.render_path_id;
 
 	CameraShapeConfig shape{};
-	shape.aspect_ratio = static_cast<float>(config.width) / static_cast<float>(config.height);// 0.25f;
+	shape.aspect_ratio = static_cast<float>(config.width) / static_cast<float>(config.height);
+	shape.fov = 0.15f; // TODO
 
 	comp_camera.InitializeCamera(config, shape);
 	m_transform.SetPosition({ 0.0f, 10.0f, -10.0f });
 	comp_camera.SetTarget({ 0.0f, 0.0f, 0.0f });
 }
 
-void CameraMonitor::Update()
+void CameraMonitor::SetTarget(const Vector3 target)
 {
-	auto player = GetOwner().FindGameObject<Player>();
-	m_transform.SetPosition(player->GetTransform().GetPositionGlobal() + Vector3{ 0.0f, 5.0f, 5.0f });
+	auto& camera = m_components.Get<ComponentCamera>(m_comp_id_camera);
+	camera.SetTarget(target);
+}
 
-	auto& comp_camera = m_components.Get<ComponentCamera>(m_comp_id_camera);
-	comp_camera.SetTarget(player->GetTransform().GetPositionGlobal());
+void CameraMonitor::SetCameraShapeConfig(const CameraShapeConfig& config)
+{
+	m_camera_shape_config = config;
+	auto& camera = m_components.Get<ComponentCamera>(m_comp_id_camera);
+	camera.SetShapeConfig(config);
 }

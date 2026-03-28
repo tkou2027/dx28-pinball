@@ -1,5 +1,5 @@
 #include "pass_sprite.h"
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 #include "render/render_states.h"
 #include "render/render_scene.h"
 #include "render/render_resource.h"
@@ -77,7 +77,7 @@ void PassSprite::Begin()
 	const auto& render_states = GetRenderStates();
 	m_context->PSSetSamplers(0, 1, render_states.m_ss_point_wrap.GetAddressOf());
 
-	m_context->RSSetState(render_states.m_rs_cull_back.Get());
+	m_context->RSSetState(render_states.m_rs_cull_none.Get());
 	m_context->OMSetDepthStencilState(render_states.m_dss_depth_disabled.Get(), 0);
 }
 

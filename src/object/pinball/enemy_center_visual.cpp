@@ -19,18 +19,24 @@ void EnemyCenterVisual::InitializeConfig(const EnemyCenterShapeConfig& shape_con
 	// side screens
 	m_screen_squares.clear();
 	m_screen_squares.reserve(m_config.sides);
+
+	auto& texture_loader = GetTextureLoader();
+	const auto screen_texture_id = texture_loader.GetOrCreateRenderTextureId(g_camera_presets.screen_main.name);
+	const Vector2 screen_pixel_scale = Vector2{
+		(float)g_camera_presets.screen_main.width, (float)g_camera_presets.screen_main.height } * 0.15f; // TODO
+	float rotation_step = Math::TWO_PI / static_cast<float>(m_config.sides);
 	for (int i = 0; i < m_config.sides; ++i)
 	{
 		auto screen_square = GetOwner().CreateGameObject<ScreenSquare>();
-		const float rotation = static_cast<float>(i) * (Math::TWO_PI / static_cast<float>(m_config.sides));
+		const float rotation = Math::PI + static_cast<float>(i) * rotation_step; // align front face by adding pi
 		const float px = sinf(rotation) * m_config.side_radius * Math::INV_SQRT_2;
 		const float pz = cosf(rotation) * m_config.side_radius * Math::INV_SQRT_2;
 		screen_square->GetTransform().SetParent(&m_transform);
 		screen_square->GetTransform().SetPosition(Vector3{ px, 0.0f, pz });
-		screen_square->GetTransform().SetRotationYOnly(rotation);
+		screen_square->GetTransform().SetRotationYOnly(rotation - Math::PI); // default plane facing -z
 
 		float width = m_config.side_radius * Math::SQRT_2; // TODO: adjust width calculation
-		screen_square->InitializeConfig(width, m_config.side_height, i, m_config.sides);
+		screen_square->InitializeConfig(screen_texture_id, screen_pixel_scale, width, m_config.side_height, i, m_config.sides);
 		m_screen_squares.push_back(screen_square);
 	}
 
@@ -44,7 +50,6 @@ void EnemyCenterVisual::InitializeConfig(const EnemyCenterShapeConfig& shape_con
 
 	// borders
 	auto& comp_render_mesh = m_components.Get<ComponentRendererMesh>(m_comp_id_mesh);
-	auto& texture_loader = GetTextureLoader();
 	{
 		MaterialDesc material_desc{};
 		TechniqueDescDefault material_default{};

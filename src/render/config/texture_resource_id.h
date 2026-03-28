@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <tuple>
 
 enum class TextureType : uint8_t
 {
@@ -10,6 +11,7 @@ enum class TextureType : uint8_t
 enum class TexturePlaceholder : uint8_t
 {
 	WHITE,
+	BLACK,
 	NORMAL,
 	METALLIC,
 	ROUGHNESS,
@@ -26,9 +28,9 @@ enum class TextureUsageType
 
 struct TextureResourceId
 {
-	int id{ -1 };
-	TextureType type{ TextureType::STATIC };
 	TexturePlaceholder placeholder{ TexturePlaceholder::WHITE };
+	TextureType type{ TextureType::STATIC };
+	int id{ -1 };
 
 	bool operator==(const TextureResourceId& other) const noexcept
 	{

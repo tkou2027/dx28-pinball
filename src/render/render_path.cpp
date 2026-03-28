@@ -61,16 +61,16 @@ void RenderPathManager::Draw(const RenderScene& render_scene)
 	{
 		// get path used by camera
 		const CameraUsageConfig& usage = camera->GetUsageConfig();
-		const int path_id = usage.render_path_id;
-		auto& path = m_paths.at(static_cast<size_t>(path_id));
+		m_active_path_index = usage.render_path_id;
+		auto& path = m_paths.at(static_cast<size_t>(m_active_path_index));
 
 		// update objects visible to camera
 		// TODO: visible objects per frustrum
-		const auto& camera_render_layer = usage.render_layer;
-		path->UpdateVisibleRenderables(
-			render_scene.GetRenderablesManager(),
-			camera_render_layer
-		);
+		RenderPathViewContext view_context{};
+		view_context.render_layer = usage.render_layer;
+		view_context.invert_culling = usage.invert_culling;
+		view_context.camera = camera;
+		path->UpdateViewContext(view_context);
 
 		// camera might draw multiple times with different view & projection (e.g. cube)
 		for (int i = 0; i < camera->GetViewContextCount(); i++)
@@ -100,11 +100,18 @@ void RenderPathManager::Draw(const RenderScene& render_scene)
 		// swap textures
 		camera->AfterDraw();
 	}
+	m_active_path_index = -1;
 }
 
 RenderPathBase& RenderPathManager::GetRenderPath(size_t path_index)
 {
 	return *m_paths.at(path_index);
+}
+
+RenderPathBase& RenderPathManager::GetActiveRenderPath()
+{
+	assert(m_active_path_index >= 0);
+	return *m_paths.at(static_cast<size_t>(m_active_path_index));
 }
 
 std::string RenderPathManager::GetViewContextKey(const CameraUsageConfig& config)

@@ -1,6 +1,23 @@
 #include "buffer.h"
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 using namespace Microsoft::WRL;
+
+Microsoft::WRL::ComPtr<ID3D11Buffer> Buffer::CreateVertexBufferImmutable(
+	ID3D11Device* device, size_t size, const void* data)
+{
+	D3D11_BUFFER_DESC desc = {};
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.ByteWidth = static_cast<UINT>(size);
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	desc.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA init_data = {};
+	init_data.pSysMem = data;
+
+	ComPtr<ID3D11Buffer> buffer{ nullptr };
+	HR(device->CreateBuffer(&desc, &init_data, buffer.GetAddressOf()));
+	return buffer;
+}
 
 ComPtr<ID3D11Buffer> Buffer::CreateConstantBuffer(ID3D11Device* device, size_t size)
 {

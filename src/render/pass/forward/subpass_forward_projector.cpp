@@ -8,8 +8,8 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 namespace
 {
@@ -30,7 +30,7 @@ void SubPassForwardProjector::Initialize(ID3D11Device* device, ID3D11DeviceConte
 	vertex_config.shader_configs[static_cast<size_t>(ModelType::STATIC)]
 		= { L"vertex_fullscreen.cso", Shader::InputLayoutType::MESH_STATIC };
 	PassBaseGeometry::Initialize(device, context, vertex_config);
-	m_ps = Shader::CreateShaderPixel(m_device, L"pixel_forward_projector.cso");
+	m_ps = Shader::CreateShaderPixel(m_device, L"pixel_forward_projector_light.cso");
 	m_cb_per_material = Buffer::CreateConstantBuffer(m_device, sizeof(MaterialProjector));
 }
 

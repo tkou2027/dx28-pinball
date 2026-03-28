@@ -11,8 +11,8 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 namespace
 {
@@ -117,24 +117,7 @@ void PassGeometryCel::SetInfoPerMaterial(const ModelRenderKey& model_key)
 	// cel
 
 	// states
-	switch (material.cull_type)
-	{
-	case CullType::CULL_BACK:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_back.Get());
-		break;
-	}
-	case CullType::CULL_FRONT:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_front.Get());
-		break;
-	}
-	case CullType::CULL_NONE:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_none.Get());
-		break;
-	}
-	}
+	SetCullState(material.cull_type);
 
 	{
 		//const auto& material_cel = material_desc.GetTechnique<TechniqueDescDeferredCel>(m_curr_render_layer);

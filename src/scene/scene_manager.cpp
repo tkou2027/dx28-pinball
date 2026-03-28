@@ -21,7 +21,6 @@ void SceneManager::Finalize()
 
 void SceneManager::Update()
 {
-	UpdateTransfer();
 	m_scene_current->Update();
 }
 
@@ -29,16 +28,23 @@ void SceneManager::SetNextScene(SceneName next)
 {
 	m_scene_name_next = next;
 }
-void SceneManager::UpdateTransfer()
+bool SceneManager::UpdateTransferOut()
+{
+	if (m_scene_name_next == SceneName::SCENE_NONE)
+	{
+		return false;
+	}
+	// finalize current scene
+	m_scene_current->Finalize();
+	delete m_scene_current;
+	return true;
+}
+void SceneManager::UpdateTransferIn()
 {
 	if (m_scene_name_next == SceneName::SCENE_NONE)
 	{
 		return;
 	}
-	// finalize current scene
-	m_scene_current->Finalize();
-	delete m_scene_current;
-
 	// initialize next scene
 	switch (m_scene_name_next)
 	{

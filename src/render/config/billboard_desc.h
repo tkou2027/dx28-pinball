@@ -5,7 +5,7 @@
 
 struct BillboardDesc
 {
-	TextureResourceId texture_id{ -1 };
+	TextureResourceId texture_id{};
 	bool has_uv_animation{ false };
 	std::vector<UVFrameAnimationDesc> uv_animation_desc;
 };

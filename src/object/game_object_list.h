@@ -18,7 +18,7 @@ public:
 	void OnSceneInitialized();
 	void Add(std::shared_ptr<GameObject> object);
 	const std::list<std::shared_ptr<GameObject> >& GetList() const { return m_objects; }
-	void SetUpdateLayer(UpdateLayer layer) { m_update_layer = layer; }
+	void SetUpdateLayer(UpdateLayer layer);
 	UpdateLayer GetUpdateLayer() const { return m_update_layer; }
 	// create
 	template<typename TGameObject>

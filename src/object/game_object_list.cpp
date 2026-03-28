@@ -53,6 +53,15 @@ void GameObjectList::Add(std::shared_ptr<GameObject> object)
 	m_objects.push_back(object);
 }
 
+void GameObjectList::SetUpdateLayer(UpdateLayer layer)
+{
+	for (auto& obj : m_objects)
+	{
+		obj->OnEnterUpdateLayer(layer);
+	}
+	m_update_layer = layer;
+}
+
 void GameObjectList::HandleRemove()
 {
 	std::list<std::shared_ptr<GameObject>> remaining;

@@ -24,12 +24,14 @@ public:
 	const Vector3& GetPosition() const { return m_position; }
 	const Vector3& GetUp() const { return m_up; }
 	void SetViewMatrix(const DirectX::XMMATRIX& view_matrix);
+	// reflection plane
+	void SetReflectionPlaneConfig(const CameraPlaneReflectionConfig& config);
 
 	void GetDirectionXZNormalized(Vector3& out_forward, Vector3& out_right) const;
 private:
 	CameraUsageConfig m_usage_config{};
 	CameraShapeConfig m_shape_config{};
-
+	CameraPlaneReflectionConfig m_reflection_plane_config{};
 	Vector3 m_up{ 0.0f, 1.0f, 0.0f };
 	Vector3 m_target{ 0.0f, 5.0f, 0.0f };
 	Vector3 m_position{ 0.0f, 0.0f, 0.0f };

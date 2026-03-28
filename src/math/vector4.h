@@ -2,6 +2,7 @@
 #include <cassert>
 #include <stddef.h>
 #include <DirectXMath.h>
+#include "vector3.h"
 
 class Vector4
 {
@@ -41,6 +42,11 @@ public:
 	Vector4 operator*(float t) const
 	{
 		return Vector4{ x * t, y * t, z * t, w * t };
+	}
+
+	Vector3 GetXYZ() const
+	{
+		return Vector3{ x, y, z };
 	}
 
 	DirectX::XMFLOAT4 ToXMFLOAT4() const

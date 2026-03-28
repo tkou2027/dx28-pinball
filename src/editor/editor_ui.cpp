@@ -3,12 +3,14 @@
 #include "global_context.h"
 #include "platform/window.h"
 #include "render/render_system.h"
-
+#include "render/render_scene.h"
+#include "render/render_resource.h"
 #include "scene/scene_manager.h"
+#include "render/render_path.h"
 
 #pragma comment (lib, "imgui_release.lib") 
 
-#include "shader_setting.h"
+#include "render/shader_setting.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -41,148 +43,78 @@ LRESULT EditorUI::ProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 }
 
-void EditorUI::Update() const
+void EditorUI::Update()
 {
+	//ImGuiIO& io = ImGui::GetIO();
+	//auto& window = g_global_context.m_window;
+	//io.DisplaySize = ImVec2(static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()));
+
+	m_unique_id = 0;
+
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	
-	DrawShaderSetting();
+
+	ImGui::Begin("Renderer Editor");
+
+	// game objects ====
+	ImGui::BeginChild("Settings", ImVec2(m_default_width, 0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+	ImGui::Text("Settings");
 	DrawSceneObjects();
+	DrawShaderSetting();
+	ImGui::EndChild();
+	// game objects ====
+
+	ImGui::SameLine(); // next column
+	// render textures ====
+	ImGui::BeginChild("Render Textures", ImVec2(m_default_width, 0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+	ImGui::Text("Render Textures");
+	DrawRenderTextures();
+	ImGui::EndChild();
+	// render textures ====
+
+	ImGui::SameLine(); // next column
+	// render paths ====
+	ImGui::BeginChild("Render Paths", ImVec2(m_default_width, 0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+	ImGui::Text("Render Paths");
+	DrawRenderPaths();
+	ImGui::EndChild();
+	// render paths ====
+	ImGui::End();
 
 	ImGui::Render();
 }
 
 void EditorUI::Draw() const
 {
-	
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
-static bool DrawEnemyEditor(std::vector<EditorEnemySetting>& list, bool& desiredReset)
+void EditorUI::DrawShaderSetting()
 {
-	bool modified = false;
-
-	for (int i = 0; i < list.size(); i++)
-	{
-		ImGui::PushID(i);
-		ImGui::Text("Enemy %d", i);
-		ImGui::Indent();
-
-		if (ImGui::InputInt("Type", &list[i].type))
-			modified = true;
-
-		if (ImGui::InputFloat3("Position", &list[i].position.x))
-			modified = true;
-
-		ImGui::SameLine();
-		if (ImGui::Button("Remove"))
-		{
-			list.erase(list.begin() + i);
-			modified = true;
-			ImGui::Unindent();
-			ImGui::PopID();
-			break;
-		}
-
-		ImGui::Unindent();
-		ImGui::Separator();
-		ImGui::PopID();
-	}
-
-	if (ImGui::Button("Add Enemy"))
-	{
-		list.push_back(EditorEnemySetting{});
-		modified = true;
-	}
-
-	if (ImGui::Button("Reset Enemy"))
-	{
-		desiredReset = true;
-		modified = true;
-	}
-
-	return modified;
-}
-
-
-static bool DrawLightEditor(std::vector<EditorLightSetting>& list)
-{
-	bool modified = false;
-
-	for (int i = 0; i < list.size(); i++)
-	{
-		ImGui::PushID(i);
-		ImGui::Text("Light %d", i);
-		ImGui::Indent();
-
-		if (ImGui::InputFloat3("Position", &list[i].position.x))
-			modified = true;
-
-		if (ImGui::ColorEdit3("Color", &list[i].color.x))
-			modified = true;
-
-		ImGui::SameLine();
-		if (ImGui::Button("Remove"))
-		{
-			list.erase(list.begin() + i);
-			modified = true;
-			ImGui::Unindent();
-			ImGui::PopID();
-			break;
-		}
-
-		ImGui::Unindent();
-		ImGui::Separator();
-		ImGui::PopID();
-	}
-
-	if (ImGui::Button("Add"))
-	{
-		list.push_back(EditorLightSetting{});
-		modified = true;
-	}
-
-	return modified;
-}
-
-
-void EditorUI::DrawShaderSetting() const
-{
-	ImGui::Begin("Test");
-		
+	// TODO: deprecate this and use editor items instead
 	if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::SliderFloat3("Light Dir", &g_shader_setting.light_direction.x, -10.0f, 10.0f);
 		ImGui::ColorEdit3("Light Color", &g_shader_setting.light_color.x);
-		ImGui::SliderFloat("Light Intencity", &g_shader_setting.light_intensity, 0.0f, 20.0f);
-		DrawLightEditor(
-			g_shader_setting.lights
-		);
+		ImGui::SliderFloat("Light Intencity", &g_shader_setting.light_intensity, 0.0f, 100.0f);
 	}
 
 	if (ImGui::CollapsingHeader("Screen Space Reflection", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::SliderFloat("Max Distance", &g_shader_setting.ssr_setting.max_distance, 1.0f, 64.0f);
-		ImGui::SliderFloat("Resolution", &g_shader_setting.ssr_setting.resolution, 0.0f, 1.0f);
+		ImGui::SliderFloat("Stride", &g_shader_setting.ssr_setting.stride, 1.0f, 30.0f);
 		ImGui::SliderFloat("Thickness", &g_shader_setting.ssr_setting.thickness, 0.0f, 2.0f);
-		ImGui::SliderInt("Steps", &g_shader_setting.ssr_setting.steps, 1, 32);
+		ImGui::SliderInt("Steps", &g_shader_setting.ssr_setting.steps, 1, 200);
 	}
-
 
 	if (ImGui::CollapsingHeader("Ramp Map", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::SliderInt("Color", &g_shader_setting.cel_offset, 0.0f, 6.0f);
 	}
-
-	if (ImGui::CollapsingHeader("Camera"))
-	{
-		ImGui::SliderFloat("FOV", &g_shader_setting.camera_fov, 0.1f, 3.0f);
-	}
-	ImGui::End();
 }
 
-void EditorUI::DrawSceneObjects() const
+void EditorUI::DrawSceneObjects()
 {
 	Scene* scene = g_global_context.m_scene_manager->GetCurrentScene();
 	if (!scene)
@@ -195,127 +127,128 @@ void EditorUI::DrawSceneObjects() const
 	{
 		object->GetEditorItem(items);
 	}
-	ImGui::Begin("Scene");
-	DrawObjectEditorItems(items);
-	ImGui::End();
+	DrawEditorItems(items);
 }
 
-void EditorUI::DrawObjectEditorItems(const std::vector<EditorItem>& items) const
+void EditorUI::DrawRenderTextures()
 {
-	for (const auto& item : items)
+	auto& camera_manager = g_global_context.m_render_system->GetRenderScene().GetCameraManager();
+	const auto cameras = camera_manager.GetActiveCameras();
+	for (const auto& camera : cameras)
 	{
-		if (ImGui::CollapsingHeader(item.label.c_str()))
+		const auto& camera_usage = camera->GetUsageConfig();
+		if (ImGui::CollapsingHeader(camera_usage.render_camera_key.c_str()))
 		{
-			for (const auto& property : item.properties)
-			{
-				switch (property.type)
-				{
-				case EditorPropertyType::FLOAT:
-					ImGui::SliderFloat(
-						property.label.c_str(),
-						static_cast<float*>(property.data_ptr),
-						property.min,
-						property.max
-					);
-					break;
-				case EditorPropertyType::FLOAT2:
-					ImGui::SliderFloat2(
-						property.label.c_str(),
-						static_cast<float*>(property.data_ptr),
-						property.min,
-						property.max
-					);
-					break;
-				case EditorPropertyType::FLOAT3:
-					ImGui::SliderFloat3(
-						property.label.c_str(),
-						static_cast<float*>(property.data_ptr),
-						property.min,
-						property.max
-					);
-					break;
-				case EditorPropertyType::INT:
-					ImGui::SliderInt(
-						property.label.c_str(),
-						static_cast<int*>(property.data_ptr),
-						static_cast<int>(property.min),
-						static_cast<int>(property.max)
-					);
-					break;
-				default:
-					break;
-				}
-			}
+			std::vector<EditorItem> items;
+			camera->GetEditorItems(items);
+			DrawEditorItems(items);
 		}
 	}
 }
 
-//void EditorUI::DrawShaderSetting() const
-//{
-//	ImGui::Begin("Test");
-//
-//	if (ImGui::CollapsingHeader("Model"))
-//	{
-//		ImGui::Checkbox("Alicia", &g_shader_setting.alicia);
-//	}
-//	if (ImGui::CollapsingHeader("Cel"))
-//	{
-//		ImGui::Checkbox("Enable Cel", &g_shader_setting.enable_cel);
-//		ImGui::Checkbox("Enable Phong", &g_shader_setting.enable_phong);
-//		ImGui::SliderInt("Cel Color", &g_shader_setting.cel_offset, 0.0f, 6.0f);
-//		ImGui::SliderFloat3("Light Dir", &g_shader_setting.light_direction.x, -10.0f, 10.0f);
-//	}
-//
-//	if (ImGui::CollapsingHeader("Outline"))
-//	{
-//		ImGui::Checkbox("Enable Outline", &g_shader_setting.enable_outline);
-//		ImGui::ColorEdit3("Color", &g_shader_setting.outline_color.x);
-//		ImGui::SliderFloat("Width", &g_shader_setting.outline_width, 0.0f, 0.01f);
-//		//ImGui::ColorEdit3("Color", (float*)&g_shaderSettings.outlineColor);
-//	}
-//
-//	if (ImGui::CollapsingHeader("Camera"))
-//	{
-//		ImGui::SliderFloat("FOV", &g_shader_setting.camera_fov, 0.1f, 3.0f);
-//	}
-//
-//	if (ImGui::CollapsingHeader("Portal", ImGuiTreeNodeFlags_DefaultOpen))
-//	{
-//		ImGui::SliderFloat3("Position", &g_shader_setting.mask_position.x, 0.0f, 80.0f);
-//		ImGui::SliderFloat("Yaw", &g_shader_setting.mask_yaw, 0.0f, Math::TWO_PI);
-//		ImGui::SliderFloat("Scale", &g_shader_setting.mask_scale, 1.0f, 100.0f);
-//		ImGui::Checkbox("Scale Animation", &g_shader_setting.mask_animation);
-//	}
-//
-//	if (ImGui::CollapsingHeader("Aim", ImGuiTreeNodeFlags_DefaultOpen))
-//	{
-//		ImGui::SliderFloat3("Aim Position", &g_shader_setting.aim_position.x, 0.0f, 80.0f);
-//		ImGui::SliderFloat("Aim Yaw", &g_shader_setting.aim_yaw, 0.0f, Math::TWO_PI);
-//	}
-//
-//	if (ImGui::CollapsingHeader("Aim", ImGuiTreeNodeFlags_DefaultOpen))
-//	{
-//		ImGui::SliderInt("Map Size X", &g_shader_setting.map_width_half, 1, 10);
-//		ImGui::SliderInt("Map Size Z", &g_shader_setting.map_depth_half, 1, 10);
-//	}
-//
-//	//if (ImGui::Button("Dash"))
-//	//{
-//	//	g_shader_setting.desired_dash = true;
-//	//}
-//
-//	//if (ImGui::Button("Reset"))
-//	//{
-//	//	g_shader_setting.desired_reset = true;
-//	//}
-//
-//	if (ImGui::CollapsingHeader("Enemies", ImGuiTreeNodeFlags_DefaultOpen))
-//	{
-//		DrawEnemyEditor(
-//			g_shader_setting.enemies,
-//			g_shader_setting.desired_enemy_reset
-//		);
-//	}
-//
-//	ImGui::End();
-//}
+void EditorUI::DrawRenderPaths()
+{
+	auto& path_manager = g_global_context.m_render_system->GetRenderPathManager();
+	auto& camera_manager = g_global_context.m_render_system->GetRenderScene().GetCameraManager();
+	const auto cameras = camera_manager.GetActiveCameras();
+	for (const auto& camera : cameras)
+	{
+		const auto& camera_usage = camera->GetUsageConfig();
+		if (ImGui::CollapsingHeader(camera_usage.render_camera_key.c_str()))
+		{
+			std::vector<EditorItem> items;
+			const size_t path_id = camera_usage.render_path_id;
+			const auto& path = path_manager.GetRenderPath(path_id);
+			path.GetEditorItems(camera_usage.render_camera_key, items);
+
+			// ImGui::Begin(("Render Path: " + camera->GetUsageConfig().render_camera_key).c_str());
+
+			DrawEditorItems(items);
+		}
+	}
+}
+
+// imgiu utils for drawing editor items
+void EditorUI::DrawEditorItems(const std::vector<EditorItem>& items)
+{
+	for (const auto& item : items)
+	{
+		bool has_label = item.label.length() > 0;
+		ImGui::PushID(m_unique_id++);
+		if (has_label ? ImGui::TreeNode(item.label.c_str()) : true)
+		{
+			for (const auto& image : item.images)
+			{
+				DrawEditorImage(image);
+			}
+			for (const auto& property : item.properties)
+			{
+				DrawEditorProperty(property);
+			}
+			if (has_label)
+			{
+				ImGui::TreePop();
+			}
+		}
+		ImGui::PopID();
+	}
+}
+
+void EditorUI::DrawEditorImage(const EditorImage& image)
+{
+	const float width = ImGui::GetContentRegionAvail().x;
+	ImGui::PushID(m_unique_id++);
+	if (ImGui::TreeNode(image.label.c_str()))
+	{
+		ImGui::Image(
+			(ImTextureID)image.srv_ptr,
+			ImVec2{ width, width / image.aspect_ratio },
+			ImVec2{ 0.0f, 0.0f },
+			ImVec2{ 1.0f, 1.0f }
+		);
+		ImGui::TreePop();
+	}
+	ImGui::PopID();
+}
+
+void EditorUI::DrawEditorProperty(const EditorProperty& property) const
+{
+
+	switch (property.type)
+	{
+	case EditorPropertyType::FLOAT:
+		ImGui::SliderFloat(
+			property.label.c_str(),
+			static_cast<float*>(property.data_ptr),
+			property.min,
+			property.max
+		);
+		break;
+	case EditorPropertyType::FLOAT2:
+		ImGui::SliderFloat2(
+			property.label.c_str(),
+			static_cast<float*>(property.data_ptr),
+			property.min,
+			property.max
+		);
+		break;
+	case EditorPropertyType::FLOAT3:
+		ImGui::SliderFloat3(
+			property.label.c_str(),
+			static_cast<float*>(property.data_ptr),
+			property.min,
+			property.max
+		);
+		break;
+	case EditorPropertyType::INT:
+		ImGui::SliderInt(
+			property.label.c_str(),
+			static_cast<int*>(property.data_ptr),
+			static_cast<int>(property.min),
+			static_cast<int>(property.max)
+		);
+		break;
+	default:
+		break;
+	}
+}

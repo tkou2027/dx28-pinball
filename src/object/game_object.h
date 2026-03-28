@@ -40,6 +40,7 @@ public:
 	void RemoveUpdateLayer(UpdateLayer layer);
 	bool IfUpdateLayer(UpdateLayer layer) const;
 	void SetSceneUpdateLayer(UpdateLayer layer);
+	virtual void OnEnterUpdateLayer(UpdateLayer layer) {}
 	UpdateLayer GetSceneUpdateLayer() const;
 	// collision
 	virtual void OnCollision(const struct CollisionInfo& collision) {}
@@ -54,7 +55,7 @@ public:
 protected:
 	// global resource
 	class PresetManager& GetPresetManager() const;
-	class TextureLoader& GetTextureLoader() const;
+	static class TextureLoader& GetTextureLoader();
 	class ModelLoader& GetModelLoader() const;
 	class MaterialResourceManager& GetMaterialResource() const;
 	const class PhysicsScene& GetPhysicsScene() const;

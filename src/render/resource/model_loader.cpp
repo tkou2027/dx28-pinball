@@ -5,7 +5,7 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 #include "render/resource/texture_loader.h"
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 #include "render/resource/buffer.h"
 #include "util/debug_ostream.h"
 #include "util/resource_pool.h"
@@ -303,19 +303,24 @@ void ModelLoader::AiModelLoader::LoadMesh(const LoadingContext& loading_context,
 
 void  ModelLoader::AiModelLoader::LoadMaterial(const LoadingContext& loading_context, const aiMaterial* material, ModelTextureData& mesh_texture_data) const
 {
+	// try diffuse(blender)
 	mesh_texture_data.m_diffuse = LoadTextureOfType(loading_context, material, aiTextureType_DIFFUSE);
-	// temp
 	if (!mesh_texture_data.m_diffuse.Get())
 	{
-		mesh_texture_data.m_diffuse = TextureLoader::LoadTextureFromFile(
-			m_device, "asset/texture/placeholder/white.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+		// try pbr(maya stingray pbs)
+		mesh_texture_data.m_diffuse = LoadTextureOfType(loading_context, material, aiTextureType_BASE_COLOR);
+		if (!mesh_texture_data.m_diffuse.Get())
+		{
+			// default white
+			mesh_texture_data.m_diffuse = TextureLoader::LoadTextureFromFile(
+				m_device, "asset/texture/placeholder/white.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+		}
 	}
+	// try metallic (blender/maya)
 	mesh_texture_data.m_metallic = LoadTextureOfType(loading_context, material, aiTextureType_METALNESS);
-	if (!mesh_texture_data.m_metallic.Get())
-	{
-		mesh_texture_data.m_metallic = TextureLoader::LoadTextureFromFile(
-			m_device, "asset/texture/placeholder/black.png", DXGI_FORMAT_R8G8B8A8_UNORM);
-	}
+	// try emissive (maya(blender??))
+	mesh_texture_data.m_emissive = LoadTextureOfType(loading_context, material, aiTextureType_EMISSION_COLOR);
+	// can be null
 
 	// TODO: other textures
 	// debug
@@ -355,12 +360,12 @@ ComPtr<ID3D11ShaderResourceView> ModelLoader::AiModelLoader::LoadTextureOfType(
 	{
 
 		const aiTexture* embeddedTex = loading_context.scene->GetEmbeddedTexture(texture_path.C_Str());
+		bool srgb = type == aiTextureType_DIFFUSE || type == aiTextureType_EMISSION_COLOR || type == aiTextureType_BASE_COLOR;
 		if (embeddedTex)
 		{
 			hal::dout << "Embedded texture found: " << type << texture_path.C_Str() << std::endl;
 			if (embeddedTex->mHeight == 0)
 			{
-				bool srgb = type == aiTextureType_DIFFUSE;
 				auto texture = TextureLoader::LoadTextureFromMemory(m_device, embeddedTex, srgb);
 				assert(texture.Get());
 				return texture;
@@ -372,7 +377,8 @@ ComPtr<ID3D11ShaderResourceView> ModelLoader::AiModelLoader::LoadTextureOfType(
 		}
 		else
 		{
-			DXGI_FORMAT format = type == aiTextureType_DIFFUSE ?
+			
+			DXGI_FORMAT format = srgb ?
 				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 			std::string texFile = loading_context.root_path + '/' + texture_path.C_Str();
 			hal::dout << "Texture file found: " << texFile.c_str() << std::endl;

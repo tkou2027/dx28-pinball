@@ -22,6 +22,8 @@ void RenderResource::Initialize(ID3D11Device* device, ID3D11DeviceContext* conte
 	m_texture_loader.Initialize(m_device, m_context, swap_chain);
 	m_model_loader.Initialize(m_device, m_context);
 
+	InitializeDummyVertexBuffers();
+
 	// create common buffers?
 	m_buffer_per_projection = Buffer::CreateConstantBuffer(m_device, sizeof(BufferPerProjection));
 	m_buffer_per_projection_sprite = Buffer::CreateConstantBuffer(m_device, sizeof(BufferPerProjectionSprite));
@@ -29,15 +31,24 @@ void RenderResource::Initialize(ID3D11Device* device, ID3D11DeviceContext* conte
 	m_buffer_per_mesh = Buffer::CreateConstantBuffer(m_device, sizeof(BufferPerMesh));
 	m_buffer_lights = Buffer::CreateConstantBuffer(m_device, sizeof(BufferLightScene));
 	m_buffer_per_screen_size = Buffer::CreateConstantBuffer(m_device, sizeof(BufferScreenSize));
-	//m_buffer_light_shadows = Buffer::CreateConstantBuffer(m_device, sizeof(BufferLightShadowScene));
-	//m_buffer_per_frame = Buffer::CreateConstantBuffer(m_device, sizeof(BufferPerFrame));
-	
 
 	// instancing
 	Buffer::CreateStructuredBuffer(
 		m_device, sizeof(BufferPerMesh), MAX_INSTANCE_PER_DRAW_CALL,
 		m_buffer_instancing, m_buffer_instancing_srv
 	);
+}
+
+void RenderResource::InitializeDummyVertexBuffers()
+{
+	float uv[] = { 0.0f, 0.0f };
+	m_dummy_vertex_buffers.uv = Buffer::CreateVertexBufferImmutable(m_device, sizeof(uv), uv);
+	float normal[] = { 0.0f, 0.0f, 1.0f };
+	m_dummy_vertex_buffers.normal = Buffer::CreateVertexBufferImmutable(m_device, sizeof(normal), normal);
+	float tangent[] = { 1.0f, 0.0f, 0.0f };
+	m_dummy_vertex_buffers.tangent = Buffer::CreateVertexBufferImmutable(m_device, sizeof(tangent), tangent);
+	float white[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_dummy_vertex_buffers.color = Buffer::CreateVertexBufferImmutable(m_device, sizeof(white), white);
 }
 
 void RenderResource::Finalize()

@@ -15,6 +15,7 @@ struct CameraPreset
 struct CameraPresets
 {
 	CameraPreset main{};
+	CameraPreset reflect_plane{};
 	CameraPreset reflect{};
 	CameraPreset monitor{};
 	CameraPreset screen_main{};

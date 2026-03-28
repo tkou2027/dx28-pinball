@@ -9,6 +9,7 @@ public:
 	struct ScanInfo
 	{
 		Vector3 view_center{};
+		Vector3 view_center_forward{};
 		Vector3 display_center{};
 		Vector3 camera_position{};
 		float scale_factor{ 0.05f };
@@ -19,14 +20,15 @@ public:
 	void Update() override;
 	void Finalize() override {}
 	ScanInfo GetDummyWorldInfo() const;
-	void SetViewCenter(const Vector3& view_center, float rotation_y);
+	void SetViewCenter(const Vector3& view_center, const Vector3& view_center_forward);
 private:
 	void UpdateFollow();
 	// parts
 	std::weak_ptr<class Projector> m_projector{};
 	// world pos where dummy camera focus
 	Vector3 m_view_center{};
-	float m_rotation_y{ 0.0f }; // facing
+	Vector3 m_view_center_forward{};
+	// float m_rotation_y{ 0.0f }; // facing
 	// world pos where vr screen are placed
 	Vector3 m_display_center{};
 

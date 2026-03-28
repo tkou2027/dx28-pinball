@@ -1,7 +1,6 @@
 #include "render_system.h"
 #include "render/render_states.h"
 #include "render/render_resource.h"
-#include "render/render_pass.h"
 #include "render/render_scene.h"
 #include "render/render_path.h"
 #include "render/particle/particle_system.h"
@@ -27,13 +26,8 @@ void RenderSystem::Initialize(HWND hWnd, UINT screen_width, UINT screen_height)
 	m_render_resource = std::make_unique<RenderResource>();
 	m_render_resource->Initialize(device, context, swap_chain);
 
-	m_render_pass = std::make_unique<RenderPass>();
-	m_render_pass->Initialize(device, context, swap_chain);
-
 	m_render_path_manager = std::make_unique<RenderPathManager>();
 	CameraPathConfig::InitializeRenderPath(*m_render_path_manager);
-	// m_render_path_manager->Initialize();
-	// m_render_path_manager->Initialize(device, context, swap_chain);
 
 	m_render_scene = std::make_unique<RenderScene>();
 	m_render_scene->Initialize(device, context);
@@ -88,7 +82,6 @@ void RenderSystem::InitializeDirectX(HWND hWnd, UINT screen_width, UINT screen_h
 void RenderSystem::Finalize()
 {
 	m_render_scene->Finalize();
-	m_render_pass->Finalize();
 	m_render_resource->Finalize();
 	m_render_states->Finalize();
 }
@@ -96,12 +89,16 @@ void RenderSystem::Finalize()
 void RenderSystem::Draw()
 {
 	m_render_scene->Update();
+	m_particle_system->Update();
 	m_render_resource->UpdateBufferPerFrame();
 
-
-	// m_render_pass->Draw();
-	// m_render_path_manager->Draw(m_render_scene->GetCameraManager().GetAllCameras());
 	m_render_path_manager->Draw(*m_render_scene);
+}
+
+void RenderSystem::UpdateRelease()
+{
+	// release resources on scene change
+	m_render_scene->UpdateRelease();
 }
 
 void RenderSystem::Present()
@@ -114,24 +111,3 @@ void RenderSystem::Resize(uint32_t width, uint32_t height)
 {
 	m_render_scene->GetCameraManager().ResizeMainCamera(width, height);
 }
-
-//void RenderSystem::DrawLayer(RenderLayer layer)
-//{
-//	Scene* scene = g_global_context.m_scene_manager->GetCurrentScene();
-//	if (!scene)
-//	{
-//		return;
-//	}
-//	auto& objects = scene->GetObjects();
-//	for (int i = 0; i < objects.size(); i++)
-//	{
-//		const auto& components = objects[i]->GetComponentManager().GetComponents(ComponentLayer::RENDER);
-//		for (const auto& comp : components)
-//		{
-//			if (auto renderComp = std::dynamic_pointer_cast<ComponentRendererSprite>(comp))
-//			{
-//				renderComp->GetRenderData();
-//			}
-//		}
-//	}
-//}

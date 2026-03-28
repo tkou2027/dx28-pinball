@@ -19,20 +19,12 @@ void SceneGame::Initialize()
 {
 	m_objects.CreateGameObject<GameManager>();
 
-	// auto test = m_objects.CreateGameObject<TestEffect>();
-
-	//auto screen = m_objects.CreateGameObject<Screen>();
-	//auto floor = m_objects.CreateGameObject<TestFloor>();
-
-	//auto enemy_center = m_objects.CreateGameObject<EnemyCenter>();
-	//enemy_center->InitializeConfig({});
-	
 	Hex hex{};
 	hex.SetSize(2.8f);
 	//for (int k = 0; k < 2; k++)
 	//{
 
-		for (int r = 30; r <= 34; r++)
+		for (int r = 30; r <= 35; r++)
 		{
 			std::vector<HexCoord> coords = HexCoord::GenerateRing(r);
 			for (int i = 0; i < coords.size(); ++i)
@@ -52,7 +44,6 @@ void SceneGame::Initialize()
 			}
 		}
 	//}
-		
 	//for (int i = -11; i < 11; i++)
 	//{
 	//	auto light = m_objects.CreateGameObject<PointLight>();

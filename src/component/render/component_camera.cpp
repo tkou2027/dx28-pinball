@@ -25,9 +25,10 @@ void ComponentCamera::Update()
 	CameraUpdateData update_data{};
 	update_data.config = m_usage_config;
 	update_data.shape = m_shape_config;
-	update_data.position = m_position;
-	update_data.target = m_target;
-	update_data.up = m_up;
+	update_data.transform.position = m_position;
+	update_data.transform.target = m_target;
+	update_data.transform.up = m_up;
+	update_data.transform.reflection_plane = m_reflection_plane_config;
 	render_swap_data.camera_data.cameras_to_update.push_back(update_data);
 }
 
@@ -45,6 +46,12 @@ void ComponentCamera::SetViewMatrix(const DirectX::XMMATRIX& view_matrix)
 		m_target,
 		m_up
 	);
+}
+
+void ComponentCamera::SetReflectionPlaneConfig(const CameraPlaneReflectionConfig& config)
+{
+	assert(m_usage_config.type == CameraType::REFLECTION_PLANE);
+	m_reflection_plane_config = config;
 }
 
 void ComponentCamera::GetDirectionXZNormalized(Vector3& out_forward, Vector3& out_right) const

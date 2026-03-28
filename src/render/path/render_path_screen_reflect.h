@@ -21,10 +21,7 @@ class RenderPathScreenReflect : public RenderPathBase
 public:
 	void Initialize() override;
 	void InitializeViewContext(RenderViewKey view_id, uint32_t width, uint32_t height) override;
-	void UpdateVisibleRenderables(
-		const class SceneRenderablesManager& renderables,
-		CameraRenderLayer render_layer
-	);
+	void UpdateViewContext(const RenderPathViewContext& view_context) override;
 	void Draw(RenderViewKey view_key, const ViewContext& view_context) override;
 	void Finalize() override;
 private:

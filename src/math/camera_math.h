@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include "math/vector3.h"
+#include "math/vector4.h"
 #include "math/aabb.h"
 
 enum class CameraShapeType
@@ -37,9 +38,22 @@ namespace CameraMath
 		float fov_y, float aspect_ratio, float z_near, float z_far);
 	DirectX::XMMATRIX CalculateProjectionMatrixOrthographic(
 		float width, float height, float z_near, float z_far);
+	DirectX::XMMATRIX CalculateProjectionMatrixOrthographicOffCenter(
+		float width, float height, float z_near, float z_far);
 
 	DirectX::XMMATRIX CalculateViewMatrixCube(int face_index, const Vector3& position);
 	DirectX::XMMATRIX CalculateProjectionMatrixCube(float z_near, float z_far);
+
+	// plane reflection
+	DirectX::XMMATRIX CalculateReflectionMatrix(
+		const Vector3& plane_position, const Vector3& plane_normal);
+	Vector4 CalculatePlaneInReflectionView(
+		const DirectX::XMMATRIX& view_matrix,
+		const Vector3& plane_position, const Vector3& plane_normal);
+	DirectX::XMMATRIX CalculateObliqueProjection(
+		const DirectX::XMMATRIX& proj_matrix,
+		const Vector4& plane_vector_v
+	);
 
 	void CalculateDirectionXZNormalized(
 		const Vector3& position, const Vector3& target,

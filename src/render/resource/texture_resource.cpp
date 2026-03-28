@@ -1,6 +1,6 @@
 #include <cassert>
 #include "texture_resource.h"
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 // utils start
 // shadow mapping
 static DXGI_FORMAT GetDepthSRVFormat(DXGI_FORMAT texture_format)
@@ -129,10 +129,23 @@ void TextureResource2D::CreateDepthStencilView(ID3D11Device* device, const D3D11
 	HR(device->CreateDepthStencilView(m_texture.Get(), &dsvd, m_dsv.GetAddressOf()));
 }
 
+void TextureResource2D::CreateDepthStencilViewReadOnly(ID3D11Device* device, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsvd)
+{
+	m_dsv_read_only.Reset();
+	// TODO validate
+	HR(device->CreateDepthStencilView(m_texture.Get(), &dsvd, m_dsv_read_only.GetAddressOf()));
+}
+
 void TextureResource2D::CreateRenderTargetView(ID3D11Device* device)
 {
 	m_rtv.Reset();
 	HR(device->CreateRenderTargetView(m_texture.Get(), nullptr, m_rtv.GetAddressOf()));
+}
+
+void TextureResource2D::CreateUnorderedAccessView(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC& uavd)
+{
+	m_uav.Reset();
+	HR(device->CreateUnorderedAccessView(m_texture.Get(), &uavd, m_uav.GetAddressOf()));
 }
 
 void TextureResource2D::Resize(ID3D11Device* device, uint32_t width, uint32_t height)
@@ -174,13 +187,18 @@ void TextureResource2D::Resize(ID3D11Device* device, uint32_t width, uint32_t he
 		m_dsv->GetDesc(&dsvd);
 		CreateDepthStencilView(device, dsvd);
 	}
-	// TODO
-	//if (m_uav)
-	//{
-	//	D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
-	//	m_uav->GetDesc(&uavd);
-	//	CreateUnorderedAccessView(uavd);
-	//}
+	if (m_dsv_read_only)
+	{
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd{};
+		m_dsv_read_only->GetDesc(&dsvd);
+		CreateDepthStencilViewReadOnly(device, dsvd);
+	}
+	if (m_uav)
+	{
+		D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
+		m_uav->GetDesc(&uavd);
+		CreateUnorderedAccessView(device, uavd);
+	}
 }
 
 void TextureResource2D::GetRenderTargetViews(std::vector<ID3D11RenderTargetView*>& rtvs) const
@@ -219,6 +237,16 @@ void TextureResource2D::InitializeRenderTarget2D(ID3D11Device* device, const D3D
 		CreateShaderResourceView(device, srvd);
 	}
 	CreateRenderTargetView(device);
+
+	// create UAV if requested
+	//if (bind_flags & D3D11_BIND_UNORDERED_ACCESS)
+	//{
+	//	D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
+	//	uavd.Format = format;
+	//	uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	//	uavd.Texture2D.MipSlice = 0;
+	//	CreateUnorderedAccessView(device, uavd);
+	//}
 }
 
 void TextureResource2D::InitializeDepth2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc)
@@ -231,7 +259,6 @@ void TextureResource2D::InitializeDepth2D(ID3D11Device* device, const D3D11_TEXT
 	const auto format_dsv{ GetDepthDSVFormat(format) };
 	assert(format_dsv != DXGI_FORMAT_UNKNOWN, "Bad format for depth stencil texture"); // check format
 
-
 	ResetAll();
 	CreateTexture2D(device, texture_desc);
 	if (bind_flags & D3D11_BIND_SHADER_RESOURCE)
@@ -242,6 +269,52 @@ void TextureResource2D::InitializeDepth2D(ID3D11Device* device, const D3D11_TEXT
 	}
 	CD3D11_DEPTH_STENCIL_VIEW_DESC dsvd(D3D11_DSV_DIMENSION_TEXTURE2D, format_dsv);
 	CreateDepthStencilView(device, dsvd);
+
+	//// create UAV for depth if requested (use SRV-compatible format)
+	//if (bind_flags & D3D11_BIND_UNORDERED_ACCESS)
+	//{
+	//	const auto format_srv{ GetDepthSRVFormat(format) };
+	//	if (format_srv != DXGI_FORMAT_UNKNOWN)
+	//	{
+	//		D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
+	//		uavd.Format = format_srv;
+	//		uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	//		uavd.Texture2D.MipSlice = 0;
+	//		CreateUnorderedAccessView(device, uavd);
+	//	}
+	//}
+}
+
+void TextureResource2D::InitializeDepth2DWithReadOnly(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc)
+{
+	InitializeDepth2D(device, texture_desc);
+	const auto format{ texture_desc.Format };
+	const auto format_dsv{ GetDepthDSVFormat(format) };
+	CD3D11_DEPTH_STENCIL_VIEW_DESC dsvd{ D3D11_DSV_DIMENSION_TEXTURE2D, format_dsv };
+	dsvd.Flags |= D3D11_DSV_READ_ONLY_DEPTH;
+	dsvd.Flags |= D3D11_DSV_READ_ONLY_STENCIL;
+	CreateDepthStencilViewReadOnly(device, dsvd);
+}
+
+void TextureResource2D::InitializeUnorderedAccess2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc)
+{
+	const auto bind_flags{ texture_desc.BindFlags };
+	assert(bind_flags & D3D11_BIND_UNORDERED_ACCESS); // check binding flags
+	// TODO validate format
+	const auto format{ texture_desc.Format };
+
+	ResetAll();
+	CreateTexture2D(device, texture_desc);
+	if (bind_flags & D3D11_BIND_SHADER_RESOURCE)
+	{
+		CD3D11_SHADER_RESOURCE_VIEW_DESC srvd(D3D11_SRV_DIMENSION_TEXTURE2D, format);
+		CreateShaderResourceView(device, srvd);
+	}
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
+	uavd.Format = format;
+	uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	uavd.Texture2D.MipSlice = 0;
+	CreateUnorderedAccessView(device, uavd);
 }
 
 void TextureResource2D::ResetAll()
@@ -249,7 +322,9 @@ void TextureResource2D::ResetAll()
 	m_texture.Reset();
 	m_srv.Reset();
 	m_rtv.Reset();
+	m_uav.Reset();
 	m_dsv.Reset();
+	m_dsv_read_only.Reset();
 	m_from_swap_chain = false;
 	m_swap_chain = nullptr;
 }
@@ -375,3 +450,63 @@ void TextureResourceCube::ResetAll()
 	}
 }
 // texture cube end ========
+
+void TextureResource2DReadWrite::Initialize(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc)
+{
+	const auto format{ texture_desc.Format }; // TODO: check format
+	const auto bind_flags{ texture_desc.BindFlags };
+	assert(bind_flags & D3D11_BIND_SHADER_RESOURCE);
+	assert(bind_flags & D3D11_BIND_UNORDERED_ACCESS);
+
+	CreateTexture2D(device, texture_desc);
+	// srv for all mip levels
+	CD3D11_SHADER_RESOURCE_VIEW_DESC srvd(D3D11_SRV_DIMENSION_TEXTURE2D, format);
+	CreateShaderResourceView(device, srvd);
+	// srv and uav for each mip level
+	CreateViewsPerLevel(device);
+}
+
+// texture 2d read write start ========
+void TextureResource2DReadWrite::Resize(ID3D11Device* device, uint32_t width, uint32_t height)
+{
+	TextureResource2D::Resize(device, width, height);
+	CreateViewsPerLevel(device);
+}
+
+void TextureResource2DReadWrite::ResetAll()
+{
+	TextureResource2D::ResetAll();
+	m_srvs_per_level.clear();
+	m_uavs_per_level.clear();
+}
+
+void TextureResource2DReadWrite::CreateViewsPerLevel(ID3D11Device* device)
+{
+	m_srvs_per_level.clear();
+	m_uavs_per_level.clear();
+	// get actual mip levels
+	D3D11_TEXTURE2D_DESC actual_desc{};
+	this->GetTexture()->GetDesc(&actual_desc);
+	const UINT actual_mips = actual_desc.MipLevels;
+
+	// create views for each mip level
+	m_srvs_per_level.assign(actual_mips, nullptr);
+	m_uavs_per_level.assign(actual_mips, nullptr);
+	for (UINT i = 0; i < actual_mips; ++i)
+	{
+		// srv
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvd = {};
+		srvd.Format = actual_desc.Format;
+		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvd.Texture2D.MostDetailedMip = i;
+		srvd.Texture2D.MipLevels = 1;
+		HR(device->CreateShaderResourceView(this->GetTexture().Get(), &srvd, &m_srvs_per_level[i]));
+
+		// uav
+		D3D11_UNORDERED_ACCESS_VIEW_DESC uavd = {};
+		uavd.Format = actual_desc.Format;
+		uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+		uavd.Texture2D.MipSlice = i;
+		HR(device->CreateUnorderedAccessView(this->GetTexture().Get(), &uavd, &m_uavs_per_level[i]));
+	}
+}

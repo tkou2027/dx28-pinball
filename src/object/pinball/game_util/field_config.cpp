@@ -141,69 +141,24 @@ namespace
 
 		const float center_step = to_center / 6.0f;
 
-
-		// bumpers
-		//{
-		//	auto bumper_preset_tri = g_bumper_presets[static_cast<size_t>(BumperType::TRI_BUMPER)];
-		//	auto bumper_preset_qua = g_bumper_presets[static_cast<size_t>(BumperType::QUAD_BUMPER)];
-		//	const float qua_size_half = bumper_preset_qua.radius * Math::INV_SQRT_2;
-
-		//	room.bumpers.push_back(
-		//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 0.0f, Vector2{ 0.0f, -(room.floor.radius_inner * 1.5f + 15.0f) } }
-		//	);
-		//	room.bumpers.push_back(
-		//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 1.0f, Vector2{ -(room.floor.radius_inner * 1.5f + 15.0f), 0.0f } }
-		//	);
-		//	room.bumpers.push_back(
-		//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 0.0f, Vector2{ (room.floor.radius_inner * 1.5f + 15.0f), 0.0f } }
-		//	);
-		//	room.bumpers.push_back(
-		//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 1.0f, Vector2{ 0.0f, (room.floor.radius_inner * 1.5f + 15.0f) } }
-		//	);
-
-		//}
-		// goals
-		//{
-		//	const float goal_radius = 18.0f;
-		//	const float goal_height = 16.0f;
-
-		//	room.goals.push_back(
-		//		GoalConfig{
-		//			GoalType::DEFAULT,
-		//			1,  // speed level
-		//			goal_radius * 1,  // radius
-		//			goal_height,  // height
-		//			{ 0.0f, 0.0f } // position
-		//		}
-		//	);
-		//}
 		// center enemies
 		{
 
 			float status_aspect_inv = 24.0f / 1024.0f;
 			EnemyCenterConfig enemy{};
-			//enemy.shape.position = Vector3{ 0.0f, 0.0f, 0.0f };
-			//enemy.shape.side_radius = 30.0f;
-			//enemy.shape.side_height = 80.0f;
-			//enemy.shape.status_radius = 40.0f;
-			enemy.shape.status_height = enemy.shape.status_radius * Math::SQRT_2 * 4 * status_aspect_inv;
-			//enemy.shape.status_position_y = 30.0f;
-			//enemy.shape.sides = 4;
-			//enemy.health = 100.0f;
 
 			EnemyAttackPhaseConfig phase_0{};
 			EnemyAttackPhaseConfig phase_1{};
 			// attacks
 			{
+			
 				EnemyAttackConfig attack{};
 				attack.type = EnemyAttackType::BUMPER;
-				//attack.prepare_duration = 0.5f;
-				//attack.execute_duration = 1.0f;
-				//attack.cooldown_duration = 10.0f;
 				attack.bumpers.push_back(
 					BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 0.0f, Vector2{ 0.0f, -(room.floor.radius_inner + 15.0f) } }
 				);
 				attack.bumpers.push_back(
+
 					BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 2.0f * 1.0f, Vector2{ -(room.floor.radius_inner + 15.0f), 0.0f } }
 				);
 				attack.bumpers.push_back(
@@ -215,27 +170,6 @@ namespace
 
 				phase_0.attacks.push_back(attack);
 			}
-			//{
-			//	EnemyAttackConfig attack{};
-			//	attack.type = EnemyAttackType::BUMPER;
-			//	//attack.prepare_duration = 0.5f;
-			//	//attack.execute_duration = 1.0f;
-			//	//attack.cooldown_duration = 10.0f;
-			//	attack.bumpers.push_back(
-			//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 0.0f, Vector2{ 0.0f, -(room.floor.radius_inner + 15.0f) } }
-			//	);
-			//	attack.bumpers.push_back(
-			//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 2.0f * 1.0f, Vector2{ -(room.floor.radius_inner + 15.0f), 0.0f } }
-			//	);
-			//	attack.bumpers.push_back(
-			//		BumperConfig{ BumperType::TRI_BUMPER, -Math::PI / 2.0f * 1.0f, Vector2{ (room.floor.radius_inner + 15.0f), 0.0f } }
-			//	);
-			//	attack.bumpers.push_back(
-			//		BumperConfig{ BumperType::TRI_BUMPER, Math::PI / 3.0f * 1.0f, Vector2{ 0.0f, (room.floor.radius_inner + 15.0f) } }
-			//	);
-
-			//	phase_0.attacks.push_back(attack);
-			//}
 			enemy.attack_phases.push_back(phase_0);
 			// enemy.attack_phases.push_back(phase_1);
 			room.enemies_center.push_back(enemy);
@@ -251,9 +185,6 @@ FieldConfig g_field_config
 	{
 		// CreateFloor0(),
 		// CreateFloor1(),
-		CreateFloor2(),
-		// CreateFloor0(),
-		// CreateFloor1(),
-
+		CreateFloor2()
 	}
 };

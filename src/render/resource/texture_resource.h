@@ -40,13 +40,17 @@ public:
 	void CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
 	void CreateShaderResourceView(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC& srvd);
 	void CreateDepthStencilView(ID3D11Device* device, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsvd);
+	void CreateDepthStencilViewReadOnly(ID3D11Device* device, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsvd);
 	void CreateRenderTargetView(ID3D11Device* device);
+	void CreateUnorderedAccessView(ID3D11Device* device, const D3D11_UNORDERED_ACCESS_VIEW_DESC& uavd);
 
 	// getters
 	ComPtr<ID3D11Texture2D> GetTexture() const override { return m_texture; }
 	ComPtr<ID3D11ShaderResourceView> GetShaderResourceView() const { return m_srv; }
 	ComPtr<ID3D11RenderTargetView> GetRenderTargetView() const { return m_rtv; }
 	ComPtr<ID3D11DepthStencilView> GetDepthStencilView() const { return m_dsv; }
+	ComPtr<ID3D11DepthStencilView> GetDepthStencilViewReadOnly() const { return m_dsv_read_only; }
+	ComPtr<ID3D11UnorderedAccessView> GetUnorderedAccessView() const { return m_uav; }
 
 	// common interface
 	void Resize(ID3D11Device* device, uint32_t width, uint32_t height) override;
@@ -56,20 +60,25 @@ public:
 	void InitializeRenderTarget2DFromSwapChain(ID3D11Device* device, IDXGISwapChain* swap_chain);
 	void InitializeRenderTarget2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
 	void InitializeDepth2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
+	void InitializeDepth2DWithReadOnly(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
+	void InitializeUnorderedAccess2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
 	// helpers preset
 	const static CD3D11_TEXTURE2D_DESC DESC_PREST_RENDER_TARGET;
 	const static CD3D11_TEXTURE2D_DESC DESC_PREST_RENDER_TARGET_HDR;
 	const static CD3D11_TEXTURE2D_DESC DESC_PREST_DEPTH_STENCIL;
+	const static CD3D11_TEXTURE2D_DESC DESC_PREST_DEPTH_STENCIL_READ_ONLY;
 	const static CD3D11_TEXTURE2D_DESC DESC_PREST_RENDER_TARGET_AUTO_MIP;
 	static CD3D11_TEXTURE2D_DESC GetTextureDesc(DXGI_FORMAT format, UINT bind);
-private:
-	void ResetAll();
+protected:
+	virtual void ResetAll();
 	// texture2d
 	ComPtr<ID3D11Texture2D> m_texture{ nullptr };
 	// views
 	ComPtr<ID3D11ShaderResourceView> m_srv{ nullptr };
 	ComPtr<ID3D11RenderTargetView> m_rtv{ nullptr };
 	ComPtr<ID3D11DepthStencilView> m_dsv{ nullptr };
+	ComPtr<ID3D11UnorderedAccessView> m_uav{ nullptr };
+	ComPtr<ID3D11DepthStencilView> m_dsv_read_only{ nullptr };
 	// back buffer
 	bool m_from_swap_chain{ false };
 	IDXGISwapChain* m_swap_chain{ nullptr };
@@ -111,4 +120,19 @@ private:
 	static constexpr int FACE_NUM{ 6 };
 	// std::array<ComPtr<ID3D11ShaderResourceView>, FACE_NUM> m_srv_faces;
 	std::array<ComPtr<ID3D11RenderTargetView>, FACE_NUM> m_rtv_faces;
+};
+
+class TextureResource2DReadWrite : public TextureResource2D
+{
+public:
+	void Initialize(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& texture_desc);
+	ComPtr<ID3D11ShaderResourceView> GetSRVOfLevel(uint32_t level) const { return m_srvs_per_level[level]; }
+	ComPtr<ID3D11UnorderedAccessView> GetUAVOfLevel(uint32_t level) const { return m_uavs_per_level[level]; }
+	uint32_t GetMipCount() const { return (uint32_t)m_srvs_per_level.size(); }
+	void Resize(ID3D11Device* device, uint32_t width, uint32_t height) override;
+private:
+	void ResetAll() override;
+	void CreateViewsPerLevel(ID3D11Device* device);
+	std::vector<ComPtr<ID3D11ShaderResourceView> > m_srvs_per_level;
+	std::vector<ComPtr<ID3D11UnorderedAccessView> > m_uavs_per_level;
 };

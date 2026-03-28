@@ -26,6 +26,14 @@ private:
 	ResourcePool<MaterialDesc> m_materials_pool{};
 };
 
+struct DummyVertexBuffers
+{
+	Microsoft::WRL::ComPtr<ID3D11Buffer> uv;      // float2(0,0)
+	Microsoft::WRL::ComPtr<ID3D11Buffer> normal;  // float3(0,0,1)
+	Microsoft::WRL::ComPtr<ID3D11Buffer> tangent; // float3(1,0,0)
+	Microsoft::WRL::ComPtr<ID3D11Buffer> color;   // float4(1,1,1,1)
+};
+
 class RenderResource
 {
 public:
@@ -41,6 +49,9 @@ public:
 	MaterialResourceManager& GetMaterialManager() { return m_material_manager; }
 	const MaterialResourceManager& GetMaterialManager() const { return m_material_manager; }
 
+	// dummy vertex buffers
+	DummyVertexBuffers m_dummy_vertex_buffers;
+
 	// constant buffers
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_per_projection;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_per_projection_sprite;
@@ -48,46 +59,12 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_lights;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_per_mesh;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_per_screen_size;
-	// Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_light_shadows;
-	// Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_per_frame;
 
 	// instancing
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_buffer_instancing;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_buffer_instancing_srv;
-
-	// textures
-	// const TextureResource2D& GetRenderTexture2D(int texture_id) const
-	// {
-	// 	return std::get<TextureResource2D>(m_render_textures_pool.Get(texture_id));
-	// }
-	// const TextureResourceCube& GetRenderTextureCube(int texture_id) const
-	// {
-	// 	return std::get<TextureResourceCube>(m_render_textures_pool.Get(texture_id));
-	// }
-	// TextureResource2D& GetRenderTexture2D(int texture_id)
-	// {
-	// 	return std::get<TextureResource2D>(m_render_textures_pool.Get(texture_id));
-	// }
-	// TextureResourceCube& GetRenderTextureCube(int texture_id)
-	// {
-	// 	return std::get<TextureResourceCube>(m_render_textures_pool.Get(texture_id));
-	// }
-	// int RegisterRenderTexture(
-	// 	const std::string& key,
-	// 	const std::variant<TextureResource2D, TextureResourceCube>& texture)
-	// {
-	// 	const int id = m_render_textures_pool.AddUnique(key, texture);
-	// 	return id;
-	// }
-	// TextureResourceId GetRenderTextureId(const std::string& key) const
-	// {
-	// 	int texture_id = m_render_textures_pool.GetId(key);
-	// 	TextureResourceId resource_id{};
-	// 	resource_id.id = texture_id;
-	// 	resource_id.type = TextureType::CAMERA;
-	// 	return resource_id;
-	// }
 private:
+	void InitializeDummyVertexBuffers();
 	// resource loaders
 	ModelLoader m_model_loader;
 	TextureLoader m_texture_loader;

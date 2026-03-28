@@ -180,7 +180,7 @@ void Geometry::CreatePlaneXY(float width, float height, MeshGeometry& mesh)
 
 	for (int i = 0; i < 4; i++)
 	{
-		mesh.normals[i] = { 0.0f, 0.0f, 1.0f };
+		mesh.normals[i] = { 0.0f, 0.0f, -1.0f };
 	}
 
 	// top left
@@ -587,6 +587,33 @@ void Geometry::CreateHexTileMap(const HexTileMap& tile_map, MeshGeometry& mesh)
 
 	mesh.colors = tile_map.GetColors();
 	ComputeTangents(mesh);
+}
+
+void Geometry::CreatePlaneIndex(float width, float height, MeshGeometry& mesh)
+{
+	mesh.indices.clear();
+	mesh.indices.reserve((width - 1) * (height - 1) * 6);
+
+	for (uint32_t y = 0; y < height - 1; ++y)
+	{
+		const float y_offset = y * width;
+		for (uint32_t x = 0; x < width - 1; ++x)
+		{
+			uint32_t i0 = y_offset + x;
+			uint32_t i1 = y_offset + x + 1;
+			uint32_t i2 = y_offset + width + x;
+			uint32_t i3 = y_offset + width + x + 1;
+
+			// triangle 1
+			mesh.indices.push_back(i0);
+			mesh.indices.push_back(i1);
+			mesh.indices.push_back(i2);
+			// triangle 2
+			mesh.indices.push_back(i1);
+			mesh.indices.push_back(i3);
+			mesh.indices.push_back(i2);
+		}
+	}
 }
 
 // compute tangent with help of ai and learnopengl

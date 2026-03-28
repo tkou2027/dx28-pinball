@@ -30,6 +30,8 @@ public:
     static void CreateHexTileMap(const class HexTileMap& tile_map, MeshGeometry& mesh);
     // static void CreateSphere(float radius = 1.0f, uint32_t levels = 20, uint32_t slices = 20, MeshGeometry& mesh);
 
+    static void CreatePlaneIndex(float width, float height, MeshGeometry& mesh);
+
     // generate tangents
     static void ComputeTangents(MeshGeometry& mesh);
 };

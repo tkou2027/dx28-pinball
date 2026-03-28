@@ -6,14 +6,27 @@
 #include "render/render_scene.h"
 #include "render/render_states.h"
 #include "render/resource/buffer.h"
-#include "render/dx_trace.h"
+#include "render/particle/particle_system.h"
+#include "render/util/dx_trace.h"
+
 using namespace Microsoft::WRL;
 
-struct VertexSprite
+namespace
 {
-	float position[3];
-	float uv[2];
-};
+	struct VertexSprite
+	{
+		float position[3];
+		float uv[2];
+	};
+	struct PlaneCommon
+	{
+		DirectX::XMFLOAT2 uv_offset;
+		DirectX::XMFLOAT2 uv_scale;
+		DirectX::XMFLOAT2 size;
+		float _padding_1;
+		float _padding_2;
+	};
+}
 
 void PassParticle::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -23,12 +36,14 @@ void PassParticle::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 	m_vs = Shader::CreateShaderVertex(m_device, L"vertex_texture_particle.cso", Shader::InputLayoutType::APPEND_POS_TEX);
 	m_ps = Shader::CreateShaderPixel(m_device, L"pixel_texture_particle.cso");
 
+	m_cb_plane_common = Buffer::CreateConstantBuffer(m_device, sizeof(PlaneCommon));
+
 	// create quad VB (4 vertices: XY in local quad space, UV)
 	VertexSprite verts[4] =
 	{
 		{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f } },
-		{ {  0.5f, -0.5f, 0.0f }, { 1.0f, 1.0f } },
 		{ { -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f } },
+		{ {  0.5f, -0.5f, 0.0f }, { 1.0f, 1.0f } },
 		{ {  0.5f,  0.5f, 0.0f }, { 1.0f, 0.0f } }
 	};
 	D3D11_BUFFER_DESC bd{};
@@ -53,10 +68,11 @@ void PassParticle::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 void PassParticle::Draw()
 {
 	SetInfoPerDraw();
-	const auto& render_scene = g_global_context.m_render_system->GetRenderScene();
-	for (const auto& item : render_scene.m_particles)
+	const auto& particle_system = g_global_context.m_render_system->GetParticleSystem();
+	const auto emitter_render_data = particle_system.GetParticleManager().GetEmitterRenderData();
+	for (const auto emitter : emitter_render_data.emitters)
 	{
-		DrawItem(item);
+		DrawParticles(*emitter);
 	}
 	ResetPerDraw();
 }
@@ -72,23 +88,32 @@ void PassParticle::SetInfoPerDraw()
 	const auto& render_resource = GetRenderResource();
 	m_context->VSSetConstantBuffers(0, 1, render_resource.m_buffer_per_projection.GetAddressOf());
 	m_context->VSSetConstantBuffers(1, 1, render_resource.m_buffer_per_view.GetAddressOf());
+	m_context->VSSetConstantBuffers(2, 1, m_cb_plane_common.GetAddressOf());
 
 	const auto& render_states = GetRenderStates();
-	m_context->RSSetState(render_states.m_rs_cull_front.Get());
+	m_context->RSSetState(render_states.m_rs_cull_none.Get());
 	m_context->OMSetDepthStencilState(render_states.m_dss_depth_enabled.Get(), 0);
 
 	m_context->PSSetSamplers(0, 1, render_states.m_ss_linear_wrap.GetAddressOf());
 }
 
-void PassParticle::DrawItem(const TextureParticleItem& item)
+void PassParticle::DrawParticles(const EmitterData& item)
 {
-	TextureParticleConfig item_config = item.GetConfig();
+	const EmitterDesc& item_config = item.desc;
 
 	// particle structured buffer SRV
 	auto& model_loader = GetModelLoader();
-	auto& buffer_view = model_loader.GetBufferView(item_config.buffer_view_id);
-	ID3D11ShaderResourceView* srv_particle = buffer_view.buffer_srv.Get();
+	ID3D11ShaderResourceView* srv_particle = item.buffer_particles.buffer_srv.Get();
 	m_context->VSSetShaderResources(1, 1, &srv_particle);
+
+	// plane common buffer (rotation + size)
+	{
+		PlaneCommon cb{};
+		cb.uv_offset = item_config.texture_uv.uv_offset.ToXMFLOAT2();
+		cb.uv_scale = item_config.texture_uv.uv_size.ToXMFLOAT2();
+		cb.size = item_config.local_mesh_size.ToXMFLOAT2();
+		m_context->UpdateSubresource(m_cb_plane_common.Get(), 0, nullptr, &cb, 0, 0);
+	}
 
 	// particle texture (pixel shader)
 	auto& texture_loader = GetTextureLoader();

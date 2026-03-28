@@ -22,9 +22,11 @@ enum class RenderTechnique
 	FORWARD_UNLIT,
 	FORWARD_SILHOUETTE,
 	FORWARD_SCREEN,
+	FORWARD_SCREEN_PROJECTION,
 	FORWARD_GLASS,
 	FORWARD_SCREEN_BACKGROUND,
 	FORWARD_PROJECTOR,
+	FORWARD_REFLECTION_PLANE, // TODO
 	// count
 	MAX
 };
@@ -47,21 +49,21 @@ struct TechniqueDescDefault
 	static constexpr RenderTechnique TYPE{ RenderTechnique::DEFAULT };
 	// base color / albedo
 	Vector3 base_color{ 1.0f, 1.0f, 1.0f };
-	TextureResourceId albedo_texture_id{};
+	TextureResourceId albedo_texture_id{ TexturePlaceholder::WHITE };
 	// normal map
-	TextureResourceId normal_texture_id{}; // TODO: default normal map
+	TextureResourceId normal_texture_id{ TexturePlaceholder::NORMAL }; // TODO: default normal map
 	// metallic
 	float metallic{ 0.0f };
-	TextureResourceId metallic_texture_id{}; // TODO: default metallic map
+	TextureResourceId metallic_texture_id{ TexturePlaceholder::METALLIC }; // TODO: default metallic map
 	// roughness
 	float roughness{ 1.0f };
-	TextureResourceId roughness_texture_id{}; // TODO: default roughness map
+	TextureResourceId roughness_texture_id{ TexturePlaceholder::ROUGHNESS }; // TODO: default roughness map
 	// specular
 	float specular{ 0.0f };
 	// emission
 	Vector3 emission_color{ 0.0f, 0.0f, 0.0f };
 	float emission_intensity{ 0.0f };
-	TextureResourceId emission_texture_id{}; // TODO: default emission map
+	TextureResourceId emission_texture_id{ TexturePlaceholder::WHITE }; // TODO: default emission map
 	// flags
 	ShadingModel shading_model{ ShadingModel::LIT };
 	CullType cull_type{ CullType::CULL_BACK };
@@ -119,6 +121,15 @@ struct TechniqueDescForwardScreen
 	Vector2 screen_pixels_scale{ 1.0f, 1.0f };
 };
 
+struct TechniqueDescForwardScreenProjection
+{
+	static constexpr RenderTechnique TYPE{ RenderTechnique::FORWARD_SCREEN_PROJECTION };
+	TextureResourceId world_texture_id{};
+	Vector3 position_w_top_left{};
+	Vector3 position_w_bottom_right{};
+	DirectX::XMFLOAT4X4 projector_mat_view_proj{};
+};
+
 struct TechniqueDescForwardGlass
 {
 	static constexpr RenderTechnique TYPE{ RenderTechnique::FORWARD_GLASS };
@@ -153,6 +164,12 @@ struct TechniqueDescForwardProjector
 	float intensity{ 1.0f };
 };
 
+struct TechniqueDescForwardReflectionPlane
+{
+	static constexpr RenderTechnique TYPE{ RenderTechnique::FORWARD_REFLECTION_PLANE };
+	TextureResourceId texture_id{};
+};
+
 class TechniqueDesc
 {
 public:
@@ -166,9 +183,11 @@ public:
 		TechniqueDescForwardUnlit,
 		TechniqueDescForwardSilhouette,
 		TechniqueDescForwardScreen,
+		TechniqueDescForwardScreenProjection,
 		TechniqueDescForwardGlass,
 		TechniqueDescForwardScreenBackground,
-		TechniqueDescForwardProjector
+		TechniqueDescForwardProjector,
+		TechniqueDescForwardReflectionPlane
 	>;
 	TechniqueDesc() : m_data(TechniqueDescDefault{}), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescDefault& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
@@ -179,9 +198,11 @@ public:
 	TechniqueDesc(const TechniqueDescForwardUnlit& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescForwardSilhouette& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescForwardScreen& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
+	TechniqueDesc(const TechniqueDescForwardScreenProjection& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescForwardGlass& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescForwardScreenBackground& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 	TechniqueDesc(const TechniqueDescForwardProjector& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
+	TechniqueDesc(const TechniqueDescForwardReflectionPlane& desc) : m_data(desc), layer_mask(CameraRenderLayerMask::DEFAULT) {}
 
 	template<typename TDesc>
 	const TDesc& Get() const

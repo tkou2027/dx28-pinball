@@ -40,7 +40,8 @@ void ScreenCylinder::InitializeConfig(float radius, float height)
 
 	Model model{ model_desc, material_desc, &m_transform };
 	model.GetTransform().SetScale({ m_radius, m_height, m_radius });
-	model.GetTransform().SetRotationYOnly(Math::PI * 0.25f);
+	// make uv fits hp bar
+	model.GetTransform().SetRotationYOnly(-Math::PI * 0.25f);
 
 	comp_render_mesh.AddModel(model);
 }

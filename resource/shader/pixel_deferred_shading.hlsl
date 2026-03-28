@@ -9,8 +9,6 @@ SamplerComparisonState shadow_sampler : register(s1);
 SamplerState g_sampler_linear_wrap : register(s2);
 SamplerState g_sampler_linear_clamp : register(s3);
 
-// Texture2D shadow_texture : register(t4);
-// Texture2D ramp_texture : register(t5);
 TextureCube ibl_diffuse : register(t4);
 TextureCube ibl_specular : register(t5);
 Texture2D brdf_lut : register(t6);

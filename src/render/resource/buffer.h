@@ -4,6 +4,8 @@
 class Buffer
 {
 public:
+	static Microsoft::WRL::ComPtr<ID3D11Buffer> CreateVertexBufferImmutable(
+		ID3D11Device* device, size_t size, const void* data);
 	static Microsoft::WRL::ComPtr<ID3D11Buffer> CreateConstantBuffer(
 		ID3D11Device* device, size_t size);
 	static void CreateStructuredBuffer(

@@ -10,6 +10,7 @@
 #include "render/pass/pass_deferred_shading.h"
 #include "render/pass/pass_postprocess.h"
 #include "render/pass/pass_particle.h"
+#include "render/pass/pass_particle_cloth.h"
 #include "render/pass/pass_forward.h"
 #include "render/pass/pass_sky.h"
 
@@ -29,12 +30,10 @@ class RenderPathMain : public RenderPathBase
 public:
 	void Initialize() override;
 	void InitializeViewContext(RenderViewKey view_id, uint32_t width, uint32_t height) override;
-	void UpdateVisibleRenderables(
-		const class SceneRenderablesManager& renderables,
-		CameraRenderLayer render_layer
-	);
+	void UpdateViewContext(const RenderPathViewContext& view_context) override;
 	void Draw(RenderViewKey view_key, const ViewContext& view_context) override;
 	void Finalize() override;
+	void GetEditorItems(RenderViewKey view_key, std::vector<EditorItem>& items) const override;
 private:
 	// textures
 	static constexpr int POST_PROCESS_TEMP_COUNT{ 2 };
@@ -74,8 +73,10 @@ private:
 	// forward
 	PassForward m_pass_forward{};
 	class SubPassForwardProjector* m_pass_projector{};
+	class PassReflection* m_pass_reflection{};
 	// sepecial objects
 	PassParticle m_pass_particle{};
+	PassParticleCloth m_pass_particle_cloth{};
 	PassSky m_pass_sky{};
 	// post process
 	PassPostprocess m_pass_post_process{};

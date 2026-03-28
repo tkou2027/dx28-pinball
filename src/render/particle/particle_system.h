@@ -1,13 +1,13 @@
 #pragma once
-#include "render/directx.h"
-#include "render/particle/texture_particle.h"
+#include "render/particle/particle_resource_manager.h"
 
 class ParticleSystem
 {
 public:
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context);
 	void Update();
-	TextureParticleManager& GetTextureParticleManager() { return m_texture_particle_manager;  }
+	ParticleResourceManager& GetParticleManager() { return m_particle_manager; }
+	const ParticleResourceManager& GetParticleManager() const { return m_particle_manager; }
 private:
-	TextureParticleManager m_texture_particle_manager{};
+	ParticleResourceManager m_particle_manager{};
 };

@@ -3,12 +3,6 @@
 #include "math/vector2.h"
 #include "uv_animation_desc.h"
 
-struct UVRect
-{
-	Vector2 uv_offset{ 0.0f , 0.0f };
-	Vector2 uv_size{ 1.0f, 1.0f };
-};
-
 struct UVAnimationState
 {
 	int animation_index{ 0 };

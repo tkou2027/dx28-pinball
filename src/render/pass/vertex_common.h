@@ -29,6 +29,7 @@ public:
 	}
 private:
 	static class ModelLoader& GetModelLoader();
+	static void BindPerMeshMaterial(ID3D11DeviceContext*, const class ModelData& model_data, const class MeshData& mesh_data);
 	static void SetupVertexBuffer(ID3D11DeviceContext*, const class MeshData& mesh_data, Shader::InputLayoutType input_layout_type);
 	static void SetupVertexBuffer(ID3D11DeviceContext*,
 		const class MeshData& mesh_data,const class MeshDataSkinned mesh_data_skinned, Shader::InputLayoutType input_layout_type);

@@ -12,8 +12,8 @@
 #include "render/render_common.h"
 #include "render/resource/buffer.h"
 
-#include "shader_setting.h"
-#include "render/dx_trace.h"
+#include "render/shader_setting.h"
+#include "render/util/dx_trace.h"
 
 using namespace DirectX;
 
@@ -68,24 +68,5 @@ void PassDepthNormal::SetInfoPerMaterial(const ModelRenderKey& model_key)
 	auto& texture_loader = GetTextureLoader();
 	auto albedo = texture_loader.GetTexture(material.albedo_texture_id);
 	m_context->PSSetShaderResources(0, 1, albedo.GetAddressOf());
-
-	// clip state
-	switch (material.cull_type)
-	{
-	case CullType::CULL_BACK:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_back.Get());
-		break;
-	}
-	case CullType::CULL_FRONT:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_front.Get());
-		break;
-	}
-	case CullType::CULL_NONE:
-	{
-		m_context->RSSetState(render_states.m_rs_cull_none.Get());
-		break;
-	}
-	}
+	SetCullState(material.cull_type);
 }

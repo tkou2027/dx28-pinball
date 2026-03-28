@@ -1,6 +1,6 @@
 ﻿#include "billboard_data.h"
 #include <algorithm>
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 
 void BillboardData::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {

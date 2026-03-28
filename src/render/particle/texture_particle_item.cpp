@@ -4,8 +4,8 @@
 #include "render/render_system.h"
 #include "render/particle/particle_system.h"
 
-void TextureParticleItem::SetConfig(
-	const TextureParticleConfig& config,
+void ParticleEmitter::SetConfig(
+	const EmitterDesc& config,
 	const UVFrameAnimationDesc& uv_config,
 	const TransformNode3D& transform)
 {
@@ -15,25 +15,25 @@ void TextureParticleItem::SetConfig(
 	m_transform = transform;
 }
 
-void TextureParticleItem::InitializeParticle()
+void ParticleEmitter::InitializeParticle()
 {
-	assert(m_particle_config.buffer_view_id == -1);
-	auto& manager = g_global_context.m_render_system->GetParticleSystem().GetTextureParticleManager();
-	m_particle_config.buffer_view_id = manager.InitializeOrResetParticle(
-		m_particle_config, m_transform.GetFloat4x4Global());
+	//assert(m_particle_config.buffer_view_id == -1);
+	//auto& manager = g_global_context.m_render_system->GetParticleSystem().GetParticleManager();
+	//m_particle_config.buffer_view_id = manager.InitializeOrResetParticle(
+	//	m_particle_config, m_transform.GetFloat4x4Global());
 	m_state = State::STATIC;
 }
 
-void TextureParticleItem::ResetParticle()
+void ParticleEmitter::ResetParticle()
 {
-	assert(m_particle_config.buffer_view_id != -1);
-	auto& manager = g_global_context.m_render_system->GetParticleSystem().GetTextureParticleManager();
-	m_particle_config.buffer_view_id = manager.InitializeOrResetParticle(
-		m_particle_config, m_transform.GetFloat4x4Global());
+	//assert(m_particle_config.buffer_view_id != -1);
+	//auto& manager = g_global_context.m_render_system->GetParticleSystem().GetParticleManager();
+	//m_particle_config.buffer_view_id = manager.InitializeOrResetParticle(
+	//	m_particle_config, m_transform.GetFloat4x4Global());
 	m_state = State::STATIC;
 }
 
-void TextureParticleItem::Update()
+void ParticleEmitter::Update()
 {
 	switch (m_state)
 	{
@@ -51,13 +51,13 @@ void TextureParticleItem::Update()
 	// TODO: update destroy
 }
 
-void TextureParticleItem::UpdateCrush()
+void ParticleEmitter::UpdateCrush()
 {
-	auto& manager = g_global_context.m_render_system->GetParticleSystem().GetTextureParticleManager();
-	manager.UpdateParticles(m_particle_config, g_global_context.m_timer->GetDeltaTime());
+	//auto& manager = g_global_context.m_render_system->GetParticleSystem().GetParticleManager();
+	//manager.UpdateParticles(m_particle_config, g_global_context.m_timer->GetDeltaTime());
 }
 
-void TextureParticleItem::EnterUpdateCrush()
+void ParticleEmitter::EnterUpdateCrush()
 {
 	if (m_state != State::STATIC)
 	{
@@ -67,7 +67,7 @@ void TextureParticleItem::EnterUpdateCrush()
 	m_state = State::CRUSH;
 }
 
-const TextureParticleConfig& TextureParticleItem::GetConfig() const
+const EmitterDesc& ParticleEmitter::GetConfig() const
 {
 	return m_particle_config;
 }

@@ -1,6 +1,6 @@
 #include "texture_loader.h"
 #include <memory>
-#include "render/dx_trace.h"
+#include "render/util/dx_trace.h"
 #include "render/resource/texture_resource.h"
 #include "util/debug_ostream.h"
 // direct tex
@@ -518,6 +518,7 @@ void TextureLoader::LoadPlaceholderTextures()
 	constexpr size_t placeholder_num{ static_cast<size_t>(TexturePlaceholder::MAX) };
 	std::string placeholder_files[placeholder_num] = {
 		"asset/texture/placeholder/white_srgb.png",
+		"asset/texture/placeholder/black_srgb.png",
 		"asset/texture/placeholder/normal.png",
 		"asset/texture/placeholder/white.png",
 		"asset/texture/placeholder/white.png"
@@ -525,7 +526,7 @@ void TextureLoader::LoadPlaceholderTextures()
 	for (int i = 0; i < placeholder_num; ++i)
 	{
 		// color as srgb, others as data
-		const auto resource_id = GetOrLoadTextureFromFile(placeholder_files[i], i == 0 ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM);
+		const auto resource_id = GetOrLoadTextureFromFile(placeholder_files[i], i <= 1 ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM);
 		m_placeholder_texture_ids[i] = resource_id.id;
 	}
 }

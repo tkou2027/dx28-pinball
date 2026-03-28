@@ -5,10 +5,11 @@
 enum class CameraRenderLayer : uint8_t
 {
 	DEFAULT = 0,
-	REFLECTED = 1,
-	MONITOR = 2,
-	SCREEN_MAIN = 3,
-	SCREEN_STATUS = 4,
+	REFLECTED_PLANE = 1,
+	REFLECTED = 2,
+	MONITOR = 3,
+	SCREEN_MAIN = 4,
+	SCREEN_STATUS = 5,
 
 	MAX
 };
@@ -17,6 +18,7 @@ class CameraRenderLayerMask
 {
 public:
 	static constexpr uint32_t DEFAULT{ 1 << static_cast<uint8_t>(CameraRenderLayer::DEFAULT) };
+	static constexpr uint32_t REFLECTED_PLANE{ 1 << static_cast<uint8_t>(CameraRenderLayer::REFLECTED_PLANE) };
 	static constexpr uint32_t REFLECTED{ 1 << static_cast<uint8_t>(CameraRenderLayer::REFLECTED) };
 	static constexpr uint32_t MONITOR{ 1 << static_cast<uint8_t>(CameraRenderLayer::MONITOR) };
 	static constexpr uint32_t SCREEN_MAIN{ 1 << static_cast<uint8_t>(CameraRenderLayer::SCREEN_MAIN) };

@@ -15,6 +15,15 @@ namespace
 		SCREEN_WIDTH, // width
 		SCREEN_HEIGHT, // height
 		CameraRenderLayer::DEFAULT, // render_layer
+		5 // render order
+	};
+
+	CameraPreset g_preset_reflect_plane
+	{
+		"reflect_plane", // name
+		SCREEN_WIDTH / 2, // width
+		SCREEN_HEIGHT / 2, // height
+		CameraRenderLayer::REFLECTED_PLANE, // render_layer
 		4 // render order
 	};
 
@@ -62,6 +71,10 @@ void CameraPathConfig::InitializeRenderPath(RenderPathManager& render_path_manag
 	// main
 	g_camera_presets.main = g_preset_main;
 	g_camera_presets.main.render_path_id = render_path_manager.AddPath(std::make_unique<RenderPathMain>());
+
+	// reflect plane
+	g_camera_presets.reflect_plane = g_preset_reflect_plane;
+	g_camera_presets.reflect_plane.render_path_id = g_camera_presets.main.render_path_id;
 
 	// reflect
 	g_camera_presets.reflect = g_preset_reflect;

@@ -22,7 +22,7 @@ void Projector::InitializeConfig(
 	const Vector3& position, const Vector3& target, const Vector3& up)
 {
 	auto& comp_mesh = m_components.Get<ComponentRendererMesh>(m_comp_id_mesh);
-	// comp_mesh.SetActive(true); // TODO
+	comp_mesh.SetActive(false); // TODO
 	UpdateTexture(projector_texture_id);
 	UpdateShape(shape_config, position, target, up);
 }

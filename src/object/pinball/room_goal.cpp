@@ -71,13 +71,10 @@ void RoomGoal::OnPlayerEnter(Player& player)
 	player.EnterControlled();
 
 	auto& comp_render_particle = m_components.Get<ComponentRendererParticle>(m_comp_id_render_particle);
-	auto& particle_item = comp_render_particle.GetTextureParticleItem();
-	particle_item.EnterUpdateCrush();
+	comp_render_particle.InitializeBurst();
 
 	auto& comp_render_particle_border = m_components.Get<ComponentRendererParticle>(m_comp_id_render_particle_border);
-	auto& particle_item_border = comp_render_particle_border.GetTextureParticleItem();
-	particle_item_border.EnterUpdateCrush();
-
+	comp_render_particle_border.InitializeBurst();
 	// TODO: update visual feedback
 	EnterExit();
 }
@@ -143,11 +140,10 @@ void RoomGoal::InitializeVisuals()
 	// screen
 	{
 		auto& comp_render_particle = m_components.Get<ComponentRendererParticle>(m_comp_id_render_particle);
-		auto& particle_item = comp_render_particle.GetTextureParticleItem();
-		TextureParticleConfig conf{
-			TextureParticleShape::PLANE,
-			256, 256
-		};
+		EmitterDesc conf{};
+		conf.shape = TextureParticleShape::PLANE;
+		conf.num_width = 256;
+		conf.num_height = 256;
 		auto& texture_loader = GetTextureLoader();
 		conf.texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/goal.png");
 
@@ -155,21 +151,16 @@ void RoomGoal::InitializeVisuals()
 		transform.SetParent(&m_transform);
 		transform.SetPositionY(0.0f);
 		transform.SetScale({ m_config.radius, m_config.radius * 4, m_config.radius });
-		particle_item.SetConfig(
-			conf,
-			UVFrameAnimationDesc{},
-			transform
-		);
-		particle_item.InitializeParticle();
+		comp_render_particle.InitializeEmitter(conf, transform);
 	}
 
 	{
 		auto& comp_render_particle_border = m_components.Get<ComponentRendererParticle>(m_comp_id_render_particle_border);
-		auto& particle_item = comp_render_particle_border.GetTextureParticleItem();
-		TextureParticleConfig conf{
-			TextureParticleShape::CYLINDER,
-			64, 32
-		};
+		EmitterDesc conf{};
+		conf.shape = TextureParticleShape::CYLINDER;
+		conf.num_width = 64;
+		conf.num_height = 32;
+
 		auto& texture_loader = GetTextureLoader();
 		conf.texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/goal.png");
 
@@ -177,12 +168,7 @@ void RoomGoal::InitializeVisuals()
 		transform.SetParent(&m_transform);
 		transform.SetPositionY(m_config.radius * 0.5f);
 		transform.SetScale({ m_config.radius, m_config.radius, m_config.radius });
-		particle_item.SetConfig(
-			conf,
-			UVFrameAnimationDesc{},
-			transform
-		);
-		particle_item.InitializeParticle();
+		comp_render_particle_border.InitializeEmitter(conf, transform);
 	}
 }
 

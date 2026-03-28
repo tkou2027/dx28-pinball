@@ -10,6 +10,7 @@ struct PixelOut
 Texture2D g_texture_diffuse : register(t0);
 Texture2D g_texture_emission : register(t1);
 Texture2D g_texture_screen_pixel : register(t2);
+
 SamplerState g_sampler_linear : register(s0);
 SamplerState g_sampler_point : register(s1);
 
@@ -58,7 +59,6 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     pixel_out.color = albedo * 1.0f;
 
     //pixel_out.color = pixel_fade; //albedo;
-
     // TODO: calc emission
     float4 emission = g_texture_emission.Sample(g_sampler_linear, pixel_in.uv); // blurred emission
     emission.rgb = lerp(lcdColor, albedo.rgb, pixel_fade);

@@ -26,7 +26,9 @@ void CameraFollow::Initialize()
 	config.width = camera_preset.width;
 	config.height = camera_preset.height;
 	config.render_path_id = camera_preset.render_path_id;
+	config.enable_frustum_culling = true;
 	// shape
+	m_camera_shape_config.z_near = 30.0f;
 	m_camera_shape_config.fov = 0.45f;
 	m_camera_shape_config.aspect_ratio = static_cast<float>(camera_preset.width) / static_cast<float>(camera_preset.height);
 	comp_camera.InitializeCamera(config, m_camera_shape_config);

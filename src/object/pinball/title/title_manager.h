@@ -7,6 +7,7 @@ class TitleManager : public GameObject
 public:
 	void Initialize() override;
 	void Update() override;
+	void GetEditorItem(std::vector<EditorItem>& items) override;
 private:
 	enum class TitleState
 	{
@@ -15,7 +16,7 @@ private:
 	};
 	struct TitleConfig
 	{
-		float ease_out_delay{ 0.5f };
+		float ease_out_delay{ 1.0f };
 	};
 	void UpdateIdle();
 	void EnterEaseOut();
@@ -24,4 +25,8 @@ private:
 	TitleConfig m_config{};
 	CountdownTimer m_state_countdown{};
 	std::weak_ptr<class ButtonEnter> m_button_enter{};
+	std::weak_ptr<class ScreenSquare> m_screen{};
+	std::weak_ptr<class ScreenMainUITitle> m_screen_ui{};
+	std::weak_ptr<class CameraTitle> m_camera_main{};
+	std::weak_ptr<class PointLight> m_point_light{};
 };

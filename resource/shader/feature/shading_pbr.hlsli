@@ -84,12 +84,22 @@ float3 ComputeBRDFCookTorrance(
     return (k_d * albedo / PI + specular);// * NdotL;
 }
 
+float ComputeAttenuationPointLight(
+    float distance_sq, LightPoint light
+)
+{
+    float attenuation = 1.0 / max(distance_sq, 1.0); // TODO: soft radius parameter
+    float d_to_r_sq = distance_sq / (light.attenuation_radius * light.attenuation_radius);
+    attenuation *= smoothstep(1.0f, 0.0f, d_to_r_sq * d_to_r_sq);
+    return attenuation;
+}
+
 float3 ComputeShadingCookTorrancePointLight(
     SurfaceData surface_w, LightPoint light, float3 view_dir)
 {
     float3 to_light = light.position_w - surface_w.position.xyz;
     float distance_sq = dot(to_light, to_light);
-    float attenuation = 1.0 / (distance_sq + 0.0001);
+    float attenuation = ComputeAttenuationPointLight(distance_sq, light);
     float3 radiance = light.color * attenuation;
     
     float3 light_dir = normalize(to_light);

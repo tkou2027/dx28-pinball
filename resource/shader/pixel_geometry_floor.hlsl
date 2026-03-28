@@ -87,11 +87,11 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     float3 bitangent_w = cross(normal_w, tangent_w.xyz) * sign(pixel_in.tangent_w.w);
     float3x3 tbn = float3x3(tangent_w, bitangent_w, normal_w);
     float3 normal_map = g_texture_normal.Sample(g_sampler_texture, pixel_in.uv).xyz * 2.0f - 1.0f;
-    float3 normal_map_world = normalize(mul(normal_map, tbn));
+    float3 normal = normalize(mul(normal_map, tbn));
     
     // float3  normal_map_world = GetNormalFromMap(pixel_in.position_w.xyz, pixel_in.uv, pixel_in.normal_w);
-    pixel_out.buffer_a.xyz = normal_map_world; //normalize(pixel_in.normal_w);
-    pixel_out.buffer_a.w = 0.0f;
+    pixel_out.buffer_a.xyz = normal; //normalize(pixel_in.normal_w);
+    pixel_out.buffer_a.w = 1.0f;
     // material
     // float metalness = g_metallic * g_texture_metallic.Sample(g_sampler_texture, pixel_in.uv);
     float metalness = saturate(1.0 - tile_pattern); // 0 for metal

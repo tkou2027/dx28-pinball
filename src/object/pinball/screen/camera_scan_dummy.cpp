@@ -15,7 +15,7 @@ void CameraScanDummy::Initialize()
 
 void CameraScanDummy::InitializeConfig()
 {
-	m_display_center = Vector3{0.0f, -40.0f, 0.0f};
+	m_display_center = Vector3{0.0f, 0.0f, 0.0f};
 	m_transform.SetPosition({ 0.0f, 40.0f, 0.0f });
 	
 	// TODO
@@ -26,8 +26,8 @@ void CameraScanDummy::InitializeConfig()
 	m_projector_shape.z_far = 100.0f;
 
 	auto& texture_loader = GetTextureLoader();
-	const auto screen_texture_id = texture_loader.GetOrCreateRenderTextureId(g_camera_presets.screen_main.name);
-	// const auto screen_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/test_projector.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+	// const auto screen_texture_id = texture_loader.GetOrCreateRenderTextureId(g_camera_presets.screen_main.name);
+	const auto screen_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/test_projector.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 	// projector
 	auto projector = m_projector.lock();
 	projector->InitializeConfig(
@@ -49,16 +49,19 @@ CameraScanDummy::ScanInfo CameraScanDummy::GetDummyWorldInfo() const
 {
 	CameraScanDummy::ScanInfo scan_info{};
 	scan_info.view_center = m_view_center;
+	scan_info.view_center_forward = m_view_center_forward;
 	scan_info.display_center = m_display_center;
-	scan_info.rotation_y = m_rotation_y;
-	scan_info.scale_factor = 0.02f; // TODO: config
+	// scan_info.rotation_y = m_rotation_y;
+	scan_info.scale_factor = 5.0f;//0.02f; // TODO: config
 	return scan_info;
 }
 
-void CameraScanDummy::SetViewCenter(const Vector3& view_center, float rotation_y)
+void CameraScanDummy::SetViewCenter(const Vector3& view_center, const Vector3& view_center_forward)
 {
+
 	m_view_center = view_center;
-	m_rotation_y = rotation_y;
+	m_view_center_forward = view_center_forward;
+	// m_rotation_y = rotation_y;
 	UpdateFollow();
 }
 

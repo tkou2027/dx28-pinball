@@ -163,8 +163,14 @@ void PresetManager::LoadSpritePresets()
 	{
 		SpriteDesc preset{};
 		preset.texture_path = "asset/texture/text_press_enter.png";
-		preset.size = Vector2{ 150.0f, 5.0f } *4.0f;
+		preset.size = Vector2{ 150.0f, 5.0f } * 4.0f;
 		RegisterAndLoadSpriteDesc("sprite/ui/button_enter", preset);
+	}
+	{
+		SpriteDesc preset{};
+		preset.texture_path = "asset/texture/title_text.png";
+		preset.size = Vector2{ 328.0f, 90.0f } * 4.0f;
+		RegisterAndLoadSpriteDesc("sprite/ui/title_text", preset);
 	}
 	{
 		SpriteDesc preset{};
@@ -341,6 +347,12 @@ void PresetManager::LoadModelPresets()
 		ModelDesc preset{};
 		//preset.model_file = "asset/models/character.fbx";
 		preset.model_file = "asset/models/primitive/tv.fbx";
+		RegisterAndLoadModelDesc("model/tv", preset);
+	}
+	{
+		ModelDesc preset{};
+		//preset.model_file = "asset/models/character.fbx";
+		preset.model_file = "asset/models/primitive/tv_face.fbx";
 		RegisterAndLoadModelDesc("model/tv_face", preset);
 	}
 	{
@@ -349,23 +361,39 @@ void PresetManager::LoadModelPresets()
 		preset.model_file = "asset/models/primitive/tv_box.fbx";
 		RegisterAndLoadModelDesc("model/tv_box", preset);
 	}
+	//{
+	//	ModelDesc preset{};
+	//	preset.model_file = "asset/models/vampire/dancing_vampire.dae";
+	//	// preset.model_file = "asset/models/character/BaseCharacter.fbx";
+	//	preset.has_animation = true;
+	//	AnimationDesc animation_desc{};
+	//	animation_desc.animation_file = "asset/models/vampire/dancing_vampire.dae";
+	//	// animation_desc.animation_file = "asset/models/character/BaseCharacter.fbx";
+	//	animation_desc.play_loop = true;
+	//	preset.animations_desc.push_back(animation_desc);
+	//	RegisterAndLoadModelDesc("model/test_animation", preset);
+	//	// RegisterAndLoadModelDesc("model/character", preset);
+	//}
 	{
 		ModelDesc preset{};
-		preset.model_file = "asset/models/vampire/dancing_vampire.dae";
-		// preset.model_file = "asset/models/character/BaseCharacter.fbx";
+		//preset.model_file = "asset/models/character.fbx";
+		preset.model_file = "asset/models/character/chara_anim3.fbx";
+		//preset.model_file = "asset/models/hew/block.fbx";
+		//RegisterAndLoadModelDesc("model/character", preset);
+
 		preset.has_animation = true;
 		AnimationDesc animation_desc{};
-		animation_desc.animation_file = "asset/models/vampire/dancing_vampire.dae";
+		animation_desc.animation_file = "asset/models/character/chara_anim3.fbx";
 		// animation_desc.animation_file = "asset/models/character/BaseCharacter.fbx";
 		animation_desc.play_loop = true;
 		preset.animations_desc.push_back(animation_desc);
-		RegisterAndLoadModelDesc("model/test_animation", preset);
-		// RegisterAndLoadModelDesc("model/character", preset);
+		RegisterAndLoadModelDesc("model/character", preset);
 	}
 	{
 		ModelDesc preset{};
 		//preset.model_file = "asset/models/character.fbx";
 		preset.model_file = "asset/models/character/chara_anim2.fbx";
+		//preset.model_file = "asset/models/hew/block.fbx";
 		//RegisterAndLoadModelDesc("model/character", preset);
 
 		preset.has_animation = true;
@@ -374,7 +402,7 @@ void PresetManager::LoadModelPresets()
 		// animation_desc.animation_file = "asset/models/character/BaseCharacter.fbx";
 		animation_desc.play_loop = true;
 		preset.animations_desc.push_back(animation_desc);
-		RegisterAndLoadModelDesc("model/character", preset);
+		RegisterAndLoadModelDesc("model/character_blink", preset);
 	}
 	{
 		ModelDesc preset{};

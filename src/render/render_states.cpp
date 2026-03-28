@@ -1,5 +1,5 @@
 #include "render_states.h"
-#include "dx_trace.h"
+#include "render/util/dx_trace.h"
 
 void RenderStates::Initialize(ID3D11Device* device)
 {
@@ -250,6 +250,19 @@ void RenderStates::InitializeStates()
 		HR(m_device->CreateSamplerState(&sd, m_ss_linear_clamp.GetAddressOf()));
 	}
 	{
+		D3D11_SAMPLER_DESC sd{};
+		sd.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		sd.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sd.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sd.MinLOD = 0;
+		sd.MaxLOD = D3D11_FLOAT32_MAX;
+		sd.MipLODBias = 0.0f;
+		sd.MaxAnisotropy = 1;
+		sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		HR(m_device->CreateSamplerState(&sd, m_ss_point_clamp.GetAddressOf()));
+	}
+	{
 		D3D11_SAMPLER_DESC sd = {};
 		sd.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
 		sd.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -288,8 +301,9 @@ void RenderStates::InitializeStates()
 		bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 		bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
 		bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-
-
+		bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_RED |
+			D3D11_COLOR_WRITE_ENABLE_GREEN |
+			D3D11_COLOR_WRITE_ENABLE_BLUE;
 
 		HR(m_device->CreateBlendState(&bd, m_bs_alpha.GetAddressOf()));
 		// ‰ÁZ‡¬

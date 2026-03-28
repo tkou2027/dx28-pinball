@@ -4,6 +4,7 @@
 #include "render/resource/texture_loader.h"
 #include "render/resource/model_loader.h"
 #include "config/preset_manager.h"
+#include "config/palette.h"
 #include "math/hex.h"
 
 void RoomFloorVisual::Initialize()
@@ -50,7 +51,9 @@ void RoomFloorVisual::InitializeFloorFace()
 		material_default.specular = 1.0f; // ssr
 
 		material_default.albedo_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/floor_color_0.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
-		material_default.normal_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Metal029_256-JPG_NormalDX.jpg");
+		// material_default.normal_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Metal029_256-JPG_NormalDX.jpg");
+		//material_default.normal_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Poliigon_ClayCeramicGlossy_5212_Normal.png");
+		//material_default.normal_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Plastic017A_1K-JPG_NormalDX.jpg");
 		material_default.metallic_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Metal029_256-JPG_Metalness.jpg");
 		material_default.roughness_texture_id = texture_loader.GetOrLoadTextureFromFile("asset/texture/pbr/Metal029_256-JPG_Roughness.jpg");
 
@@ -104,8 +107,8 @@ void RoomFloorVisual::InitializeFloorBorder()
 		material_default.base_color = Vector3{ 1.0f, 1.0f, 1.0f };
 		material_default.emission_color = Vector3{ 1.0f, 1.0f, 1.0f };
 		material_default.emission_intensity = 0.0f;
-		material_default.albedo_texture_id = GetTextureLoader().GetOrLoadTextureFromFile("asset/texture/goal.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
-		material_default.emission_texture_id = GetTextureLoader().GetOrLoadTextureFromFile("asset/texture/goal.png", DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+		material_default.base_color = g_palette.color_theme.GetXYZ();
+		material_default.emission_color = g_palette.color_theme.GetXYZ();
 		material_default.cull_type = CullType::CULL_NONE;
 		material_default.shading_model = ShadingModel::UNLIT;
 

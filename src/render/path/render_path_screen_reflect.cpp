@@ -51,20 +51,12 @@ void RenderPathScreenReflect::InitializeViewContext(RenderViewKey view_key, uint
 	m_texture_resources.emplace(view_key, textures);
 }
 
-void RenderPathScreenReflect::UpdateVisibleRenderables(
-	const SceneRenderablesManager& scene_renderables, CameraRenderLayer render_layer)
+void RenderPathScreenReflect::UpdateViewContext(const RenderPathViewContext& view_context)
 {
-	// static int evil_cnt{ 0 };
-	// if (evil_cnt == 1)
-	// {
-	// 	evil_cnt = 0;
-	// 	return;
-	// }
-	// evil_cnt = 1;
-
-	auto start = std::chrono::high_resolution_clock::now();
-
+	m_view_context = view_context;
+	auto& scene_renderables = g_global_context.m_render_system->GetRenderScene().GetRenderablesManager();
 	const auto& material_resource = g_global_context.m_render_system->GetRenderResource().GetMaterialManager();
+	const auto render_layer = m_view_context.render_layer;
 	const auto& visible_info = scene_renderables.GetRenderablesOfLayer(render_layer);
 
 	m_pass_forward.ResetRenderableIndices(render_layer);
@@ -76,10 +68,6 @@ void RenderPathScreenReflect::UpdateVisibleRenderables(
 		const auto& material = material_resource.GetMaterialDesc(model_info.key.material_id);
 		m_pass_forward.AddRenderableIndex(index, model_info.key.model_type, material);
 	}
-
-	auto finish = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
-	hal::dout << "updating view" << duration.count() << " " << std::endl;
 }
 
 void RenderPathScreenReflect::BuildRenderTargets(const InternalTextures& textures, uint32_t width, uint32_t height)

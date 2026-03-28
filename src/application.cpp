@@ -16,7 +16,7 @@ void Application::Initialize(const WindowConfig& window_config)
 {
 	g_global_context.StartSystems(window_config);
 	g_global_context.m_preset_manager->LoadPresets();
-	g_global_context.m_scene_manager->SetNextScene(SceneManager::SceneName::SCENE_GAME);
+	g_global_context.m_scene_manager->SetNextScene(SceneManager::SceneName::SCENE_TITLE);
 
 	g_global_context.m_window->Show();
 }
@@ -72,7 +72,6 @@ void Application::Update()
 	//auto start = std::chrono::high_resolution_clock::now();
 
 	//g_global_context.m_sound->Update();
-	//g_global_context.m_controller->Update();
 	g_global_context.m_controller->Update();
 
 	// imgui ----
@@ -80,6 +79,11 @@ void Application::Update()
 	g_global_context.m_editor->GetEditorUI().Update();
 #endif
 	//// game update
+	if (g_global_context.m_scene_manager->UpdateTransferOut())
+	{
+		g_global_context.m_render_system->UpdateRelease(); // release resources on scene change
+		g_global_context.m_scene_manager->UpdateTransferIn();
+	}
 	g_global_context.m_scene_manager->Update(); // object scripts
 	g_global_context.m_physics_system->Update(); // solve collisions
 

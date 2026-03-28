@@ -21,7 +21,7 @@ PresetManager& GameObject::GetPresetManager() const
 	return *g_global_context.m_preset_manager;
 }
 
-TextureLoader& GameObject::GetTextureLoader() const
+TextureLoader& GameObject::GetTextureLoader()
 {
 	return g_global_context.m_render_system->GetRenderResource().GetTextureLoader();
 }
