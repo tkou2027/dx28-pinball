@@ -10,7 +10,7 @@
 ## プレイ動画
 https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 
-##　ファイル構成
+## ファイル構成
 
 ```
 ├─resource
