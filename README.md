@@ -72,16 +72,28 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 </p>
 
 ### 多様な反射表現
-* 平面反射
-* スクリーンスペースリフレクション
-* 環境マッピング
-
 <p>
 <img alt="feature_reflect" src="doc/images/feature_plane_reflect.gif" height="100">
 <img alt="feature_ssr" src="doc/images/feature_ssr.png" height="100">
 <img alt="feature_reflect" src="doc/images/feature_env_map.png" height="100">
 </p>
 
+#### 平面反射
+反射カメラの行列 `src/render/render_camera.h` `src/math/camear_math.h`
+* ビュー行列：平面に対する反射行列を適用した後、メインカメラのビュー行列を適用します。
+* プロジェクション行列：平面下のオブジェクトを正しく表示するため、クリッピングを適用します。参考：https://perry.cz/articles/ProjectionMatrix.xhtml
+
+カリング設定 `src/render/render_path.h`
+* 平面反射により座標系が反転されるため、RenderPathで各カメラの描画におけるカリング設定を管理します。
+
+#### スクリーンスペースリフレクション(SSR)
+アルゴリズム `resource/shader/pixel_fullscreen_ssr.hlsl`
+* DDA(Digital Differential Analyzer)：スクリーンスペースでレイマーチングを行います。
+* 二分探索：ステップごとに一定距離で進み、背後に到達すると、二分探索で交差位置を求めます。長距離では結果が不十分なため、別手法に変更しました。
+* 階層化深度バッファ(Hi-Z)：コンピュートシェーダーでZバッファの4 ピクセルごとの最小値でミップマップを作成します。レイが最小深度より手前にある場合は、より大きいミップレベルを用いて進行を高速化します。
+
+#### 環境マッピング
+* キューブマップにレンダリングするカメラに対応しています
 
 ### 効率的な実装
 * デファードレンダリング
@@ -96,8 +108,6 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 ### 汎用的なフレームワーク
 
 作成したフレームワークは、チーム制作[https://github.com/tkou2027/at28-dash](https://github.com/tkou2027/at28-dash)でも利用されています
-
-
 
 ## 参考資料
 
