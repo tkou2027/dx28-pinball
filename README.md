@@ -2,13 +2,92 @@
 
 3Dアクションゲームとフレームワーク
 * 個人制作
-* •開発言語：C++
+* 開発言語：C++
 * ライブラリ：DirectX11, DirectXTex, Assimp, ImGui
 * ツール：Visual Studio, Git, Blender, IBLBaker
 * 制作時間：約4ヶ月
 
 ## プレイ動画
 https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
+
+## セールスポイント
+
+### シェーダーによる質感表現
+* 物理ベースレンダリング
+    * イメージベースドライティング
+* ポストプロセスエフェクト
+    * ブルーム
+    * スクリーンスペースリフレクション
+* 特殊なシェーダー
+    * ランプテクスチャを利用したトゥーンシェーダ
+    * 自動的に解像度に対応できるLCDパネルシェーダー
+
+<p>
+<img alt="feature_ibl" src="doc/images/feature_ibl.gif" height="120">
+<img alt="feature_lcd" src="doc/images/feature_lcd.gif" height="120">
+</p>
+
+### 複数のカメラによる演出
+自作フレームワークでレンダーテキスチャーを普通のテキスチャーと同じように設定できます
+<p>
+<img alt="feature_camera" src="doc/images/feature_camera.png" height="120">
+</p>
+
+### 多様な反射表現
+
+#### 平面反射
+<p>
+<img alt="feature_reflect" src="doc/images/feature_plane_reflect.gif" width="160">
+</p>
+
+反射カメラの行列 `src/render/render_camera.h` `src/math/camear_math.h`
+* ビュー行列：平面に対する反射行列を適用した後、メインカメラのビュー行列を適用します。
+* プロジェクション行列：平面下のオブジェクトを正しく表示するため、クリッピングを適用します。参考：https://perry.cz/articles/ProjectionMatrix.xhtml
+
+カリング設定 `src/render/render_path.h`
+* 平面反射により座標系が反転されるため、RenderPathで各カメラの描画におけるカリング設定を管理します。
+
+#### スクリーンスペースリフレクション(SSR)
+<p>
+<img alt="feature_ssr" src="doc/images/feature_ssr.png" width="160">
+</p>
+
+アルゴリズム `resource/shader/pixel_fullscreen_ssr.hlsl`
+* DDA(Digital Differential Analyzer)：スクリーンスペースでレイマーチングを行います。
+* 二分探索：ステップごとに一定距離で進み、背後に到達すると、二分探索で交差位置を求めます。長距離では結果が不十分なため、別手法に変更しました。
+* 階層化深度バッファ(Hi-Z)：コンピュートシェーダーでZバッファの4ピクセルごとの最小値でミップマップを作成します。レイが最小深度より手前にある場合は、より大きいミップレベルを用いて進行を高速化します。
+
+#### 環境マッピング
+<p>
+<img alt="feature_reflect" src="doc/images/feature_env_map.png" width="160">
+</p>
+
+* キューブマップにレンダリングするカメラに対応しています
+
+### パーティクルエフェクト
+<p>
+<img alt="feature_reflect" src="doc/images/feature_particle.png" width="160">
+</p>
+
+コンピュートシェーダー用いてパーティクルの初期化および更新を行いました。  
+テクスチャを参照してパーティクルの色を設定できるようにしています。  
+テクスチャから回転（Curl）を計算し、速度を更新することで、拡散するような表現を実現しました。現在も調整を進めています。
+
+### 効率的な実装
+* デファードレンダリング：Depth Pre-Passの導入や、ライトを影響範囲のみで描画するなどにより、さらに効率を向上させました
+* メモリ効率の改善：データを連続したメモリに格納し、IDで管理しています
+* GPUインスタンシング：自動的にGPUインスタンシングで描画できます
+* コンピュートシェーダー：パーティクルやポストプロセスエフェクトで利用しています
+
+### 汎用的なフレームワーク
+
+作成したフレームワークは、チーム制作[https://github.com/tkou2027/at28-dash](https://github.com/tkou2027/at28-dash)でも利用されています。  
+拡張性のあるレンダリングパスとカメラシステムにより、シャドウマッピングや、ステンシルバッファを利用した演出を素早く実装できました。
+
+<p>
+<img alt="feature_reflect" src="doc/images/image_dejikado.gif" height="100">
+<img alt="feature_reflect" src="doc/images/feature_stencil.png" height="100">
+</p>
 
 ## ファイル構成
 
@@ -46,68 +125,6 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 レンダリングパス `src/render/render_path.h`
 
 > 1回のカメラ描画に必要な処理手順を管理する役割を持ちます。各処理ステップ`src/render/pass/`は再利用できる構造になっており、例えばG Bufferの生成`src/render/pass/geometry/subpass_geometry_default.h`や、クリーンスペースリフレクション(SSR)`src/render/pass/postprocess/pass_ssr.h`などを組み合わせて利用できるようにしました。
-
-
-
-## セールスポイント
-
-### シェーダーによる質感表現
-* 物理ベースレンダリング
-* ポストプロセスエフェクト
-    * ブルーム
-    * スクリーンスペースリフレクション
-* 特殊なシェーダー
-    * セルシェーダー
-    * 自動的に解像度に対応できるLCDパネルシェーダー
-
-<p>
-<img alt="feature_ibl" src="doc/images/feature_ibl.gif" height="120">
-<img alt="feature_lcd" src="doc/images/feature_lcd.gif" height="120">
-</p>
-
-### 複数のカメラによる演出
-自作フレームワークでレンダーテキスチャーを普通のテキスチャーと同じように設定できます
-<p>
-<img alt="feature_camera" src="doc/images/feature_camera.png" height="120">
-</p>
-
-### 多様な反射表現
-<p>
-<img alt="feature_reflect" src="doc/images/feature_plane_reflect.gif" height="100">
-<img alt="feature_ssr" src="doc/images/feature_ssr.png" height="100">
-<img alt="feature_reflect" src="doc/images/feature_env_map.png" height="100">
-</p>
-
-#### 平面反射
-反射カメラの行列 `src/render/render_camera.h` `src/math/camear_math.h`
-* ビュー行列：平面に対する反射行列を適用した後、メインカメラのビュー行列を適用します。
-* プロジェクション行列：平面下のオブジェクトを正しく表示するため、クリッピングを適用します。参考：https://perry.cz/articles/ProjectionMatrix.xhtml
-
-カリング設定 `src/render/render_path.h`
-* 平面反射により座標系が反転されるため、RenderPathで各カメラの描画におけるカリング設定を管理します。
-
-#### スクリーンスペースリフレクション(SSR)
-アルゴリズム `resource/shader/pixel_fullscreen_ssr.hlsl`
-* DDA(Digital Differential Analyzer)：スクリーンスペースでレイマーチングを行います。
-* 二分探索：ステップごとに一定距離で進み、背後に到達すると、二分探索で交差位置を求めます。長距離では結果が不十分なため、別手法に変更しました。
-* 階層化深度バッファ(Hi-Z)：コンピュートシェーダーでZバッファの4 ピクセルごとの最小値でミップマップを作成します。レイが最小深度より手前にある場合は、より大きいミップレベルを用いて進行を高速化します。
-
-#### 環境マッピング
-* キューブマップにレンダリングするカメラに対応しています
-
-### 効率的な実装
-* デファードレンダリング
-
-* GPU インスタンシング
-
-* コンピュートシェーダー
-
-* メモリ効率の改善
-
-
-### 汎用的なフレームワーク
-
-作成したフレームワークは、チーム制作[https://github.com/tkou2027/at28-dash](https://github.com/tkou2027/at28-dash)でも利用されています
 
 ## 参考資料
 
