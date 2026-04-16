@@ -30,7 +30,7 @@ static float g_dither[16] =
 // Reconstruct surface data from G-Buffer
 SurfaceData GetSurfaceDataAt(float2 uv)
 {
-    return GetSurfaceDataViewFromGBuffer(uv, g_matrix_proj_inverse, g_matrix_view);
+    return GetSurfaceDataViewFromGBuffer(uv, g_matrix_proj, g_matrix_proj_inverse, g_matrix_view);
 }
 
 // Reconstruct linear view-space Z (Standard Z: 0 is near, 1 is far)
@@ -46,14 +46,6 @@ float ComputeStepScale(float mip)
     float step_scale = max(g_stride, exp2(mip));
     return step_scale;
 }
-
-// float GetDepthLinear(float2 uv, float mip, float2 mip_texture_size)
-// {
-//     float2 aligned_uv = (floor(uv * mip_texture_size) + 0.5) / mip_texture_size;
-//     float raw_depth = g_texture_hi_z.SampleLevel(g_sampler_point_clamp, uv, mip).r;
-//     // Standard Z linear reconstruction: 1.0 / (z * m23 + m33)
-//     return 1.0f / (raw_depth * g_matrix_proj_inverse[2][3] + g_matrix_proj_inverse[3][3]);
-// }
 
 float2 ComputeMipTextureSize(int mip)
 {

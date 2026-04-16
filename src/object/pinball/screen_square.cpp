@@ -39,7 +39,7 @@ void ScreenSquare::InitializeConfig(
 		// screen mesh
 		MaterialDesc material_desc{};
 		TechniqueDescDefault material_default{};
-		material_default.emission_intensity = 2.0f;
+		material_default.emission_intensity = 1.0f;
 		material_default.emission_color = Vector3{ 1.0f, 1.0f, 1.0f };
 		material_default.cull_type = CullType::CULL_NONE;
 		material_default.shading_model = ShadingModel::UNLIT;
@@ -107,7 +107,7 @@ void ScreenSquare::InitializeConfig(
 		conf.texture_id = screen_texture_id;
 		conf.local_texture_id = pixel_texture_id;
 		conf.lifetime = 5.0f;
-		conf.gravity = Vector3{ 0.0f, -9.8f * 2.0f, 0.0f };
+		conf.gravity = Vector3{ 0.0f, -9.8f * 8.0f, 0.0f };
 
 		TransformNode3D transform{};
 		transform.SetParent(&m_transform);

@@ -50,6 +50,11 @@ private:
 	void EnterExit();
 	void UpdateExit();
 
+	// utils
+	int GetIndexFromDirection(const Vector3& position) const;
+	float GetRotationFromIndex(int index) const;
+	float GetStageRatio(int index) const;
+
 	ComponentId m_comp_id_collider{};
 	// references
 	std::weak_ptr<class Room> m_room;
@@ -86,6 +91,7 @@ private:
 	{
 		float health{};
 		int health_index{ 0 };
+		bool health_break{ false };
 		CountdownTimer state_countdown{};
 		// attack
 		int attack_phase_index{ -1 };

@@ -17,7 +17,7 @@ float GetDepthFromGBuffer(float2 position_s)
     return depth;
 }
 
-SurfaceData GetSurfaceDataWorldFromGBuffer(float2 position_s, float4x4 view_proj_inverse)
+SurfaceData GetSurfaceDataWorldFromGBuffer(float2 position_s, float4x4 view_proj, float4x4 view_proj_inverse)
 {
     SurfaceData surface;
     // base color
@@ -36,7 +36,7 @@ SurfaceData GetSurfaceDataWorldFromGBuffer(float2 position_s, float4x4 view_proj
     return surface;
 }
 
-SurfaceData GetSurfaceDataViewFromGBuffer(float2 position_s, float4x4 proj_inverse, float4x4 view)
+SurfaceData GetSurfaceDataViewFromGBuffer(float2 position_s, float4x4 proj, float4x4 proj_inverse, float4x4 view)
 {
     SurfaceData surface;
     // base color
@@ -51,7 +51,7 @@ SurfaceData GetSurfaceDataViewFromGBuffer(float2 position_s, float4x4 proj_inver
     surface.normal = mul(normal_w, (float3x3) view);
     // compute position form depth
     float depth = g_texture_buffer_depth.Sample(g_sampler_buffer, position_s).r;
-    surface.position = GetPositionFromDepth(position_s, depth, proj_inverse);
+    surface.position = GetPositionFromDepth(position_s, depth, proj, proj_inverse);
     return surface;
 }
 #endif

@@ -123,22 +123,23 @@ void EnemyCenter::OnDamaged(float damage, const Vector3& position)
 	{
 		return;
 	}
-	// enter damaged state
-	m_status.health -= damage;
-	m_status_ui.lock()->UpdateValue(m_status.health);
-
 	// hurt position
 	Vector3 hurt_direction = position - m_config.shape.position;
-	hurt_direction.y = 0.0f;
-	if (hurt_direction.LengthSquared() > Math::EPSILON)
+	int hurt_index = GetIndexFromDirection(hurt_direction);
+	if (hurt_index != m_status.health_index)
 	{
-		hurt_direction.Normalize();
-		m_status.aim_position = m_config.shape.position + hurt_direction * m_config.shape.side_radius;
-		// radius from 0
-		UpdateAimCameraFollow();
-		UpdateAimUIFollow();
-		UpdateAimVisuals();
+		return;
 	}
+	hurt_direction.Normalize();
+	m_status.aim_position = m_config.shape.position + hurt_direction * m_config.shape.side_radius;
+	// radius from 0
+	UpdateAimCameraFollow();
+	UpdateAimUIFollow();
+	UpdateAimVisuals();
+
+	// enter damaged state
+	m_status.health = Math::Max(m_status.health - damage, GetStageRatio(m_status.health_index) * m_config.health);
+	m_status_ui.lock()->UpdateValue(m_status.health);
 
 	EnterHurt();
 }
@@ -274,7 +275,7 @@ void EnemyCenter::UpdateAttackFollow()
 		EnterAttackExecute();
 		return;
 	}
-	
+
 	UpdateAimCameraFollow(); // update aim position
 	// update aim visuals
 	UpdateAimVisuals();
@@ -355,6 +356,15 @@ void EnemyCenter::EnterHurt()
 	m_state = EnemyState::HURT;
 	m_status.state_countdown.Initialize(m_config.damage_delay);
 	m_main_ui.lock()->EnterActiveState(ScreenMainUI::ActiveState::HURT);
+
+	float curr_health_ratio = m_status.health / m_config.health;
+	float stage_ratio = GetStageRatio(m_status.health_index);
+	if (curr_health_ratio <= stage_ratio + Math::EPSILON)
+	{
+		m_status.health_index++;
+		m_status.health_break = true;
+	}
+
 }
 
 void EnemyCenter::UpdateHurt()
@@ -364,13 +374,10 @@ void EnemyCenter::UpdateHurt()
 	if (t <= 0.0f)
 	{
 		// stage effect
-		float curr_health_ratio = m_status.health / m_config.health;
-		float stage_ratio = 1.0f - (m_status.health_index + 1.0f) * (1.0f / m_config.shape.sides);
-		if (curr_health_ratio <= stage_ratio)
+		if (m_status.health_break)
 		{
-			// handle stage effect
-			m_visual.lock()->SetScreenCrushed(m_status.health_index);
-			m_status.health_index++;
+			m_status.health_break = false;
+			m_status.aim_ui_rotation = GetRotationFromIndex(m_status.health_index);
 		}
 		// return to attack state
 		UpdateAimVisuals();
@@ -385,6 +392,11 @@ void EnemyCenter::UpdateHurt()
 			EnterAttackPrepare();
 		}
 		return;
+	}
+	if (t < 0.9f && m_status.health_break)
+	{
+		// handle stage effect
+		m_visual.lock()->SetScreenCrushed(m_status.health_index - 1);
 	}
 	UpdateAimCameraFollow();
 	UpdateAimVisuals();
@@ -450,3 +462,50 @@ void EnemyCenter::UpdateExit()
 		m_state = EnemyState::DONE;
 	}
 }
+
+int EnemyCenter::GetIndexFromDirection(const Vector3& direction) const
+{
+	Vector3 direction_unit = direction;
+	direction_unit.y = 0.0f; // xz plane only
+	if (direction_unit.LengthSquared() < Math::EPSILON)
+	{
+		return 0; // undefined
+	}
+	direction_unit.Normalize();
+	// facing -z
+	if (fabs(direction_unit.x) > fabs(direction_unit.z))
+	{
+		if (direction_unit.x > 0)
+		{
+			return 3; // Right
+		}
+		else
+		{
+			return 1; // Left
+		}
+	}
+	else
+	{
+		if (direction_unit.z > 0)
+		{
+			return 2; // Front
+		}
+		else
+		{
+			return 0; // Back
+		}
+	}
+}
+
+float EnemyCenter::GetRotationFromIndex(int index) const
+{
+	// 0 to 2PI
+	// 0 is back (-z), 1 is left (-x), 2 is front (+z), 3 is right (+x)
+	return static_cast<float>((index + 2) % 4) * Math::HALF_PI;
+}
+
+float EnemyCenter::GetStageRatio(int index) const
+{
+	return 1.0f - (index + 1.0f) / m_config.shape.sides; // sides = 4
+}
+

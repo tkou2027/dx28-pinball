@@ -14,7 +14,7 @@ cbuffer BufferSSRConfig : register(b2)
 
 SurfaceData GetSurfaceDataAt(float2 uv)
 {
-    SurfaceData surface_v = GetSurfaceDataViewFromGBuffer(uv, g_matrix_proj_inverse, g_matrix_view);
+    SurfaceData surface_v = GetSurfaceDataViewFromGBuffer(uv, g_matrix_proj, g_matrix_proj_inverse, g_matrix_view);
     return surface_v;
 }
 

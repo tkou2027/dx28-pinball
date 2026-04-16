@@ -293,7 +293,6 @@ DirectX::XMMATRIX RenderCamera::ComputeViewMatrix() const
 		const auto reflection_matrix = CameraMath::CalculateReflectionMatrix(
 			m_reflection_plane_config.plane_position, m_reflection_plane_config.plane_normal);
 		const auto view_reference = CameraMath::CalculateViewMatrix(m_position, m_target, m_up);
-		// TODO: clip
 		// reflect world, then view
 		const auto reflected_view = reflection_matrix * view_reference;
 		return reflected_view;
@@ -306,7 +305,7 @@ DirectX::XMMATRIX RenderCamera::ComputeViewMatrix() const
 }
 DirectX::XMMATRIX RenderCamera::ComputeProjectionMatrix() const
 {
-	DirectX::XMMATRIX proj;
+	DirectX::XMMATRIX proj{};
 	switch (m_shape.shape_type)
 	{
 	case CameraShapeType::PERSPECTIVE:

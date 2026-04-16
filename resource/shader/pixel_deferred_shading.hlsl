@@ -33,7 +33,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
 {
     PixelOut pixel_out;
     
-    SurfaceData surface_w = GetSurfaceDataWorldFromGBuffer(pixel_in.uv, g_matrix_view_proj_inverse);
+    SurfaceData surface_w = GetSurfaceDataWorldFromGBuffer(pixel_in.uv, g_matrix_view_proj, g_matrix_view_proj_inverse);
 
     float4 color = 0.0f;
     

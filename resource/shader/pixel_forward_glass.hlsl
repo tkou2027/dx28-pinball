@@ -26,7 +26,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     float3 view_dir = normalize(g_view_position_w - pixel_in.position_w.xyz);
 
     float3 reflect_dir = reflect(-view_dir, normal);
-    float3 reflect_color = g_texture_environment.Sample(g_sampler_texture, reflect_dir); // hack
+    float3 reflect_color = g_texture_environment.Sample(g_sampler_texture, -reflect_dir); // hack
 
     float specular = ComputeSpecular(normal, light_dir, view_dir, 64.0);
 

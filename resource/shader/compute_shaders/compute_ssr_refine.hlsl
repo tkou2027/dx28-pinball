@@ -1,6 +1,7 @@
 Texture2D<float4> g_texture_reflection : register(t0);
 RWTexture2D<float4> g_texture_output : register(u0);
 
+// TODO: refactor
 [numthreads(8, 8, 1)]
 void main(uint3 id : SV_DispatchThreadID)
 {

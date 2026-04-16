@@ -11,4 +11,5 @@ public:
 private:
 	void SetInfoPerMaterial(const ModelRenderKey& key);
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_ps{};
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cb_material{ nullptr };
 };

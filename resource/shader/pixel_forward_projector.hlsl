@@ -26,7 +26,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     
     float2 screen_uv = pixel_in.uv; // TODO
     float depth = g_texture_depth.Sample(g_sampler, screen_uv).r;
-    float4 position_world = GetPositionFromDepth(screen_uv, depth, g_matrix_view_proj_inverse);
+    float4 position_world = GetPositionFromDepth(screen_uv, depth, g_matrix_view_proj, g_matrix_view_proj_inverse);
     
     // pixel_out.color = float4(position_world.xyz * 0.05f, 1.0f);
     // return pixel_out;

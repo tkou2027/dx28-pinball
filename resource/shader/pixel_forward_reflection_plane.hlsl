@@ -22,6 +22,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     // material
     float4 materail = g_texture_material.Sample(g_sampler, screen_uv);
     float specular = materail.y;
+    float roughness = materail.z;
 
     if (specular < 0.4 || specular > 0.6)
     {
@@ -34,6 +35,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     float2 reflect_uv = screen_uv + distortion;
     float3 reflection_color = g_texture_reflection.Sample(g_sampler, reflect_uv).rgb;
     
+    screen_uv = saturate(screen_uv);
     // position
     float depth = g_texture_depth.Sample(g_sampler, screen_uv).r;
     float4 position_w = GetPositionFromDepth(screen_uv, depth, g_matrix_view_proj_inverse);

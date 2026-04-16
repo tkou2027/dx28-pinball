@@ -275,7 +275,7 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 	);
 	m_render_targets.post_process_temps[post_process_target_index].Unbind(context);
 
-		m_gpu_timers[2].Stop();
+	m_gpu_timers[2].Stop();
 	// m_pass_bloom.DrawOutput();
 	if (m_gpu_timers[2].TryGetTime(nullptr))
 	{
@@ -293,8 +293,6 @@ void RenderPathMain::Draw(RenderViewKey view_key, const ViewContext& view_contex
 		textures.post_process_temps[1 - post_process_target_index].GetShaderResourceView().Get(),
 		textures.blur_textures.mip_textures[0].GetShaderResourceView().Get());
 	m_render_targets.post_process_temps[post_process_target_index].Unbind(context);
-
-
 
 	ID3D11RenderTargetView* nullRTVs[8] = { nullptr };
 	context->OMSetRenderTargets(8, nullRTVs, nullptr);

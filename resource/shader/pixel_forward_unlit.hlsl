@@ -12,12 +12,10 @@ Texture2D g_texture_emission : register(t1);
 SamplerState g_sampler_texture : register(s0);
 
 // materails
-cbuffer MaterialDefault : register(b0)
+cbuffer Material : register(b0)
 {
-    float g_metallic;
-    float g_specular;
-    float g_roughness;
-    uint g_shading_model;
+    float4 g_base_color;
+
     float3 g_emission_color;
     float g_emission_intensity;
 };
@@ -28,8 +26,8 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
 
     // base color
     float4 albedo = g_texture_diffuse.Sample(g_sampler_texture, pixel_in.uv);
+    albedo = albedo * g_base_color;
     clip(albedo.a - 0.1);
-    // if (g_shading_model == 3)
 
     pixel_out.color = albedo;
 

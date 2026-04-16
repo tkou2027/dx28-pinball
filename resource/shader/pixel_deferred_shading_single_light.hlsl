@@ -30,7 +30,7 @@ PixelOut main(VertexOut pixel_in) : SV_TARGET
     
     float2 screen_uv = pixel_in.position_h.xy / float2(g_screen_width, g_screen_height); // / pixel_in.position_h.w;
     // screen_uv = screen_uv * float2(0.5, -0.5) + 0.5f;
-    SurfaceData surface_w = GetSurfaceDataWorldFromGBuffer(screen_uv, g_matrix_view_proj_inverse);
+    SurfaceData surface_w = GetSurfaceDataWorldFromGBuffer(screen_uv, g_matrix_view_proj, g_matrix_view_proj_inverse);
 
     float4 color = 0.0f;
     uint shading_model = surface_w.shading_model;

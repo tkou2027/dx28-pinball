@@ -109,12 +109,12 @@ void main(uint3 id : SV_DispatchThreadID)
         }
         else
         {
-            float3 g_hit_pos = float3(0.0, 0.0, 0.0);
-            float g_hit_force = 10.0f;
+            //float3 g_hit_pos = float3(0.0, 0.0, 0.0);
+            //float g_hit_force = 10.0f;
             float rnd = Hash(index);
-            float3 dir = -normalize(p.position - g_hit_pos);
-            // p.velocity = dir * (g_hit_force + rnd * 10.0f);
-            p.velocity.y += -30.0f + rnd * 30.0f;
+            //float3 dir = -normalize(p.position - g_hit_pos);
+            //// p.velocity = dir * (g_hit_force + rnd * 10.0f);
+            p.velocity.y += -20.0f + rnd * 20.0f;
             p.life = g_life;
         }
 

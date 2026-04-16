@@ -16,7 +16,7 @@ void Application::Initialize(const WindowConfig& window_config)
 {
 	g_global_context.StartSystems(window_config);
 	g_global_context.m_preset_manager->LoadPresets();
-	g_global_context.m_scene_manager->SetNextScene(SceneManager::SceneName::SCENE_TITLE);
+	g_global_context.m_scene_manager->SetNextScene(SceneManager::SceneName::SCENE_GAME);
 
 	g_global_context.m_window->Show();
 }

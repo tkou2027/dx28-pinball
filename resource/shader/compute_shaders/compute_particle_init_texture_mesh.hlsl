@@ -26,7 +26,7 @@ void main(uint3 id : SV_DispatchThreadID)
     float3 pos;
     float3 right = normalize(float3(g_matrix_model[0][0], g_matrix_model[1][0], g_matrix_model[2][0]));
     float3 up = normalize(float3(g_matrix_model[0][1], g_matrix_model[1][1], g_matrix_model[2][1]));
-    // [branch]ÅH
+
     if (g_shape_type == SHAPE_PLANE)
     {
         pos.x = lerp(-0.5, 0.5, uv.x);
@@ -47,7 +47,6 @@ void main(uint3 id : SV_DispatchThreadID)
     p.position = pos_w.xyz;
     p.velocity = float3(0, 0, 0);
     p.uv = uv;
-    // p.color = float4(1, 1, 1, 1);
     p.life = 1e9;
     p.delay = uv.y;
     p.right = right;

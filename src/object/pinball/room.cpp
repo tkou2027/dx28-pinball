@@ -14,6 +14,7 @@
 #include "object/pinball/camera_follow.h"
 #include "object/pinball/room_floor.h"
 #include "object/pinball/room_goal.h"
+#include "object/pinball/room_background.h"
 #include "object/pinball/enemy_center.h"
 // utils
 #include "game_util/move_controller.h"
@@ -327,7 +328,8 @@ void Room::InitializeGoals()
 
 void Room::InitializeBackground()
 {
-
+	auto background = GetOwner().CreateGameObject<RoomBackground>();
+	background->InitializeConfig();
 }
 
 void Room::InitializeEnemies()

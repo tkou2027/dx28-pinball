@@ -40,7 +40,8 @@ void GameManager::Initialize()
 	field->InitializeConfig(g_field_config);
 	m_field = field;
 
-	auto player = GetOwner().CreateGameObject<Player>();
+	
+auto player = GetOwner().CreateGameObject<Player>();
 
 	const auto& room_config = g_field_config.rooms.at(0);
 	player->GetTransform().SetPosition(

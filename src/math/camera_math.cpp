@@ -129,12 +129,6 @@ Vector4 CameraMath::CalculatePlaneInReflectionView(const DirectX::XMMATRIX& view
 
 	Vector4 plane{};
 	plane.LoadXMVECTOR(plane_vector_v);
-
-	//if (plane.z > 0.0f)
-	//{
-	//	plane = plane * -1.0f;
-	//}
-	//plane.w += 0.001f;
 	return plane;
 }
 
@@ -142,6 +136,7 @@ Vector4 CameraMath::CalculatePlaneInReflectionView(const DirectX::XMMATRIX& view
 // perry.cz/articles/ProjectionMatrix.xhtml
 DirectX::XMMATRIX CameraMath::CalculateObliqueProjection(const DirectX::XMMATRIX& proj_matrix, const Vector4& plane_v)
 {
+	// point far from the new near plane
 	Vector4 q_clip{
 		Math::Sign(plane_v.x),
 		Math::Sign(plane_v.y),
@@ -150,32 +145,38 @@ DirectX::XMMATRIX CameraMath::CalculateObliqueProjection(const DirectX::XMMATRIX
 	};
 
 	// same as using inverse of projection
-	//XMFLOAT4X4 proj_matrix_float{};
-	//XMStoreFloat4x4(&proj_matrix_float, proj_matrix);
-	//Vector4 q_view{
-	//	q_clip.x / proj_matrix_float._11,
-	//	q_clip.y / proj_matrix_float._22,
-	//	1.0f,
-	//	(1.0f - proj_matrix_float._33) / proj_matrix_float._34
-	//};
-	//XMVECTOR q_view_vector = q_view.ToXMVECTOR();
-
+	// XMFLOAT4X4 proj_matrix_float{};
+	// XMStoreFloat4x4(&proj_matrix_float, proj_matrix);
+	// Vector4 q_view{
+	// 	q_clip.x / proj_matrix_float._11,
+	// 	q_clip.y / proj_matrix_float._22,
+	// 	1.0f,
+	// 	(1.0f - proj_matrix_float._33) / proj_matrix_float._34
+	// };
+	// XMVECTOR q_view_vector = q_view.ToXMVECTOR();
 	XMMATRIX inv_proj = XMMatrixInverse(nullptr, proj_matrix);
 	XMVECTOR q_view_vector = XMVector4Transform(q_clip.ToXMVECTOR(), inv_proj);
 	Vector4 q_view{};
 	q_view.LoadXMVECTOR(q_view_vector);
 
+	// new_q_clip.z = (plane dot q) * scale
+	// new_q_clip.z = q_clip.z
 	XMVECTOR plane_vector_v = plane_v.ToXMVECTOR();
 	float dot = XMVectorGetX(XMVector4Dot(plane_vector_v, q_view_vector));
 	float scale = q_view.z / dot;
 	XMVECTOR scaled_plane = DirectX::XMVectorScale(plane_vector_v, scale);
 
+	// for any point p on plane,
+	// plane(a,b,c,d) dot p = 0
+	// also, for projection matrix M,
+	// z_clip = M.col[2] dot p, thus setting M.col[2] = plane * scale
+	// makes z_clip = 0 for any p on plane
 	DirectX::XMMATRIX new_M = proj_matrix;
 	// new_M.r[2] = scaled_plane; // wrong, set column for dx
-	new_M.r[0].m128_f32[2] = scaled_plane.m128_f32[0];
-	new_M.r[1].m128_f32[2] = scaled_plane.m128_f32[1];
-	new_M.r[2].m128_f32[2] = scaled_plane.m128_f32[2];
-	new_M.r[3].m128_f32[2] = scaled_plane.m128_f32[3];
+	new_M.r[0].m128_f32[2] = XMVectorGetX(scaled_plane);
+	new_M.r[1].m128_f32[2] = XMVectorGetY(scaled_plane);
+	new_M.r[2].m128_f32[2] = XMVectorGetZ(scaled_plane);
+	new_M.r[3].m128_f32[2] = XMVectorGetW(scaled_plane);
 	return new_M;
 }
 

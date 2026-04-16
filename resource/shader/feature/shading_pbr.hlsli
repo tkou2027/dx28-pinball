@@ -46,7 +46,7 @@ float3 FresnelSchlick(float cosTheta, float3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-float3 fresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 {
     return F0 + (max((1.0 - roughness).xxx, F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
@@ -140,18 +140,18 @@ float3 ComputeShadingCookTorranceAmbient(
     float3 F0 = lerp(0.04f.xxx, surface_w.albedo.rgb, surface_w.metallic);
     
     float n_dot_v = max(dot(N, V), 0.0);
-    float3 F = fresnelSchlickRoughness(n_dot_v, F0, surface_w.roughness);
+    float3 F = FresnelSchlickRoughness(n_dot_v, F0, surface_w.roughness);
     float3 kS = F;
     float3 kD = (1.0 - kS) * (1.0 - surface_w.metallic);
 
     float3 irradiance = ibl_diffuse.Sample(sampler_cube, N);
     float3 diffuse = irradiance * surface_w.albedo.rgb;
     
-    // TODO::
+    // ambient
     const float MAX_REFLECTION_LOD = 8.0;
-    float3 prefilteredColor = ibl_specular.SampleLevel(sampler_cube, R, surface_w.roughness * MAX_REFLECTION_LOD).rgb;
+    float3 prefiltered_color = ibl_specular.SampleLevel(sampler_cube, R, surface_w.roughness * MAX_REFLECTION_LOD).rgb;
     float2 brdf = brdf_lut.Sample(sampler_clamp, float2(n_dot_v, surface_w.roughness)).rg;
-    float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+    float3 specular = prefiltered_color * (F * brdf.x + brdf.y);
     
     float ao = 0.06f; // TODO: get ao map
     float3 ambient = (kD * diffuse + specular) * ao;
