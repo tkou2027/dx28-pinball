@@ -6,6 +6,9 @@ src/**
 !src/**/*.h
 src/extern/*
 src/platform/*
+# Local Ducuments
+*.pdf
+README_pdf.md
 
 ##### Windows
 # Windows thumbnail cache files
