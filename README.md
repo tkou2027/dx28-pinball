@@ -19,12 +19,23 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
     * ブルーム
     * スクリーンスペースリフレクション
 * 特殊なシェーダー
-    * ランプテクスチャを利用したトゥーンシェーダ
-    * 自動的に解像度に対応できるLCDパネルシェーダー
 
+#### LCDパネルシェーダー  
+メッシュの大きさとテキスチャーの解像度からMipmap Levelを算出し、テキスチャの透明度を自動的に調整することで、モアレの発生を防ぎます
+<p>
+<img alt="feature_lcd" src="doc/images/feature_lcd.gif" height="120">
+</p>
+
+#### イメージベースライティング  
+抽象的な環境テクスチャを利用することで、反射表現を実現します
 <p>
 <img alt="feature_ibl" src="doc/images/feature_ibl.gif" height="120">
-<img alt="feature_lcd" src="doc/images/feature_lcd.gif" height="120">
+</p>
+
+### 複数のカメラによる演出
+自作フレームワークでレンダーテキスチャーを普通のテキスチャーと同じように設定できます
+<p>
+<img alt="feature_camera" src="doc/images/feature_camera.png" height="120">
 </p>
 
 ### 複数のカメラによる演出
