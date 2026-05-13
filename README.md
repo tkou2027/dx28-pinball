@@ -38,12 +38,6 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 <img alt="feature_camera" src="doc/images/feature_camera.png" height="120">
 </p>
 
-### 複数のカメラによる演出
-自作フレームワークでレンダーテキスチャーを普通のテキスチャーと同じように設定できます
-<p>
-<img alt="feature_camera" src="doc/images/feature_camera.png" height="120">
-</p>
-
 ### 多様な反射表現
 
 #### 平面反射
