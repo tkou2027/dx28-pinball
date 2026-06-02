@@ -84,6 +84,12 @@ https://github.com/user-attachments/assets/a1f8448a-c97f-4d3c-8f4c-982f3155ba37
 * GPUインスタンシング：自動的にGPUインスタンシングで描画できます
 * コンピュートシェーダー：パーティクルやポストプロセスエフェクトで利用しています
 
+<p>
+<img alt="feature_reflect" src="doc/images/feature_tile_based_culling.png" width="240">
+</p>
+新機能として、視錐台をタイル単位に分割し、コンピュートシェーダーを用いて各タイルに影響を与える光源を計算する仕組みを実装しました。  
+多数のライトが重なるシーンにおいて、描画効率の大幅な向上を実現しています。
+
 ### 汎用的なフレームワーク
 
 作成したフレームワークは、チーム制作[https://github.com/tkou2027/at28-dash](https://github.com/tkou2027/at28-dash)でも利用されています。  
